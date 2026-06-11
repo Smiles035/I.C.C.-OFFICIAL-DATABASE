@@ -55,7 +55,6 @@
             z-index: 2;
         }
 
-        /* Botão Retro do Índice */
         .retro-btn {
             background: transparent;
             border: 2px solid #ffb000;
@@ -76,7 +75,6 @@
             text-shadow: none;
         }
 
-        /* Secção Oculta por padrão */
         #main-content {
             display: none;
         }
@@ -100,7 +98,6 @@
         .input-line {
             display: flex;
             align-items: center;
-            display: none;
         }
 
         #terminal-input {
@@ -122,20 +119,6 @@
             display: none;
             min-height: 80px;
         }
-
-        .cursor {
-            display: inline-block;
-            width: 12px;
-            height: 24px;
-            background-color: #ffb000;
-            animation: blink 1s step-end infinite;
-            vertical-align: middle;
-        }
-
-        @keyframes blink {
-            from, to { visibility: hidden; }
-            50% { visibility: visible; }
-        }
     </style>
 </head>
 <body>
@@ -144,10 +127,10 @@
         <p>SISTEMA OPERATIVO RETRO CARREGADO COM SUCESSO.</p>
         <hr style="border: 1px dashed #ffb000;">
         
-        <!-- Botão do Índice Inicial -->
+        <!-- Botão Inicial -->
         <button id="index-button" class="retro-btn" onclick="revealDirectory()">[ ACEDER AO DIRETÓRIO PRINCIPAL ]</button>
 
-        <!-- Conteúdo que vai aparecer após o clique -->
+        <!-- Conteúdo Oculto -->
         <div id="main-content">
             <p id="directory-title"></p>
             <p id="directory-subtitle"></p>
@@ -182,7 +165,7 @@
             <div id="output-box"></div>
             <br>
 
-            <div class="input-line" id="cmd-line">
+            <div class="input-line" id="cmd-line" style="display:none;">
                 <span>COMANDO:> &nbsp;</span>
                 <input type="text" id="terminal-input" placeholder="Digite o ID e pressione Enter..." autocomplete="off">
             </div>
@@ -190,53 +173,46 @@
     </div>
 
     <script>
-        // Declarar a variável fora para que todas as funções a consigam usar
         let audioCtx = null;
-
-        // Função para inicializar o áudio apenas quando o utilizador interage
-        function initAudio() {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
-        }
 
         function playKeySound() {
             if (!audioCtx) return;
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = 'triangle'; 
-            osc.frequency.setValueAtTime(140, audioCtx.currentTime);
-            gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.02);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.02);
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'triangle'; 
+                osc.frequency.setValueAtTime(140, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.02);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.02);
+            } catch(e) {}
         }
 
         function playBeepSound() {
             if (!audioCtx) return;
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(750, audioCtx.currentTime);
-            gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.12);
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(750, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.12);
+            } catch(e) {}
         }
 
-        // --- SISTEMA DE DIGITAÇÃO AUTOMÁTICA (TYPEWRITER) ---
         function typeWriterEffect(element, text, speed, callback) {
             let i = 0;
             element.innerHTML = "";
             function type() {
                 if (i < text.length) {
-                    if (text.charAt(i) !== ' ') {
-                        playKeySound();
-                    }
+                    if (text.charAt(i) !== ' ') playKeySound();
                     element.innerHTML += text.charAt(i);
                     i++;
                     setTimeout(type, speed);
@@ -247,7 +223,7 @@
             type();
         }
 
-        function typeWriterHTML(element, htmlText, speed, callback) {
+        function typeWriterHTML(element, htmlText, speed) {
             let i = 0;
             element.innerHTML = "";
             element.style.display = 'block';
@@ -276,24 +252,36 @@
                             setTimeout(typeHTML, 0);
                         }
                     }
-                } else if (callback) {
-                    callback();
                 }
             }
             typeHTML();
         }
 
-        // --- CONTROLO DO ÍNDICE ---
+        // FUNÇÃO DE REVELAÇÃO CORRIGIDA (À prova de erros)
         function revealDirectory() {
-            // Inicializa o áudio de forma segura no clique
-            initAudio();
-            playBeepSound();
+            // Tenta iniciar o som sem bloquear o clique se falhar
+            try {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                playBeepSound();
+            } catch (e) {
+                console.log("Áudio bloqueado pelo browser");
+            }
 
-            // Esconde o botão
+            // Mostra a secção principal imediatamente
             document.getElementById('index-button').style.display = 'none';
             document.getElementById('main-content').style.display = 'block';
 
             const titleEl = document.getElementById('directory-title');
             const subtitleEl = document.getElementById('directory-subtitle');
             
-            typeWriterEffect(titleEl, "[ DIRETÓRIO PRINCIPAL ]", 40, function() {
+            // Inicia a animação de escrita de forma segura
+            typeWriterEffect(titleEl, "[ DIRETÓRIO PRINCIPAL ]", 30, function() {
+                typeWriterEffect(subtitleEl, "Insira um ID no comando em baixo para ler um ficheiro de texto:", 15, function() {
+                    document.getElementById('directory-table').style.display = 'table';
+                    document.getElementById('cmd-line').style.display = 'flex';
+                    document.getElementById('terminal-input').focus();
+                });
+            });
+        }
+
+        const ficheiros = {
