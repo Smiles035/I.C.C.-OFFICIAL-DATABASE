@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminal IBM 3151</title>
+    <style>
+        @import url('https://googleapis.com');
+
+        body {
+            background-color: #000;
+            color: #39ff14; /* Verde Fósforo Retro */
+            font-family: 'VT323', monospace;
+            font-size: 24px;
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-shadow: 0 0 5px rgba(57, 255, 20, 0.5);
+        }
+
+        .terminal {
+            width: 100%;
+            height: 100vh;
+            padding: 30px;
+            box-sizing: border-box;
+            background: #050505;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Efeito de Linhas de Monitor (Scanlines) */
+        .terminal::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 2;
+            background-size: 100% 4px, 6px 100%;
+            pointer-events: none;
+        }
+
+        /* Cursor a piscar */
+        .cursor {
+            display: inline-block;
+            width: 12px;
+            height: 24px;
+            background-color: #39ff14;
+            animation: blink 1s step-end infinite;
+        }
+
+        @keyframes blink {
+            from, to { visibility: hidden; }
+            50% { visibility: visible; }
+        }
+    </style>
+</head>
+<body>
+    <div class="terminal">
+        <p>IBM 3151 ASCII DISPLAY STATION</p>
+        <p>A CARREGAR SISTEMA OPERATIVO RETRO...</p>
+        <p>BEM-VINDO AO MEU NOVO SITE.</p>
+        <p>PRONTO: <span class="cursor"></span></p>
+    </div>
+</body>
+</html>
