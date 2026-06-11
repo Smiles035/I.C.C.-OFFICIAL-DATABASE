@@ -58,6 +58,15 @@
             z-index: 2;
         }
 
+        /* Estilo para a arte ASCII do logótipo */
+        .logo-ascii {
+            font-size: 14px;
+            line-height: 1.1;
+            white-space: pre;
+            margin-bottom: 20px;
+            text-shadow: 0 0 8px rgba(255, 176, 0, 0.8);
+        }
+
         .retro-btn {
             background: transparent;
             border: 2px solid #ffb000;
@@ -78,7 +87,11 @@
             text-shadow: none;
         }
 
-        #main-content {
+        #intro-screen {
+            display: block;
+        }
+
+        #boot-header, #main-content {
             display: none;
         }
 
@@ -123,7 +136,6 @@
             min-height: 80px;
         }
 
-        /* Espaçamento para o botão de voltar */
         .nav-actions {
             margin-top: 20px;
         }
@@ -131,13 +143,26 @@
 </head>
 <body>
     <div class="terminal">
-        <p>IBM 3151 ASCII DISPLAY STATION — V1.0</p>
-        <p>SISTEMA OPERATIVO RETRO CARREGADO COM SUCESSO.</p>
-        <hr style="border: 1px dashed #ffb000;">
-        
-        <!-- Botão Inicial -->
-        <button id="index-button" class="retro-btn" onclick="iniciarPainel()">[ ACEDER AO DIRETÓRIO PRINCIPAL ]</button>
+        <!-- 1. SECÇÃO DA ANIMAÇÃO DE INTRODUÇÃO -->
+        <div id="intro-screen">
+            <!-- Logótipo I.C.C. em Bloco ASCII -->
+            <div class="logo-ascii" id="boot-logo"></div>
+            <p id="boot-text-1"></p>
+            <p id="boot-text-2"></p>
+            <p id="boot-text-3"></p>
+            <p id="boot-text-4"></p>
+        </div>
 
+        <!-- 2. CABEÇALHO DO SISTEMA -->
+        <div id="boot-header">
+            <p>IBM 3151 ASCII DISPLAY STATION — V1.0</p>
+            <p>SISTEMA OPERATIVO RETRO CARREGADO COM SUCESSO.</p>
+            <hr style="border: 1px dashed #ffb000;">
+            
+            <button id="index-button" class="retro-btn" onclick="iniciarPainel()">[ ACEDER AO DIRETÓRIO PRINCIPAL ]</button>
+        </div>
+
+        <!-- 3. PAINEL PRINCIPAL -->
         <div id="main-content">
             <p id="directory-title"></p>
             <p id="directory-subtitle"></p>
@@ -159,7 +184,7 @@
                     <tr>
                         <td>02</td>
                         <td>notas.txt</td>
-                        <td>Notas e atualizações do servidor.</td>
+                        <td>Notas e updates do servidor.</td>
                     </tr>
                     <tr>
                         <td>ajuda</td>
@@ -176,7 +201,6 @@
                 <input type="text" id="terminal-input" placeholder="Digite o ID e pressione Enter..." autocomplete="off">
             </div>
 
-            <!-- Novo Botão para Voltar ao Menu Inicial -->
             <div class="nav-actions">
                 <button id="back-button" class="retro-btn" onclick="voltarMenu()">[ VOLTAR AO INÍCIO ]</button>
             </div>
@@ -184,6 +208,62 @@
     </div>
 
     <script>
+        // --- LOGICA DA ANIMAÇÃO DE INTRODUÇÃO ---
+        window.addEventListener('DOMContentLoaded', () => {
+            const logoEl = document.getElementById('boot-logo');
+            const t1 = document.getElementById('boot-text-1');
+            const t2 = document.getElementById('boot-text-2');
+            const t3 = document.getElementById('boot-text-3');
+            const t4 = document.getElementById('boot-text-4');
+
+            // Desenho ASCII inspirado no emblema circular e estrela central do I.C.C.
+            const iccLogo = 
+`        _.-'''''''-._
+      .'  ________   '.
+     /   /   /\\   \\   \\     INTERPLANETARY COLONIAL COUNCIL
+
+    |   |  _/__\\_  |   |          INITIALIZING TERMINAL
+    |   |  \\  /  / |   |
+     \\   \\  \\/  / /   /            - SECURE LINK ONLY -
+      '.  '------'  .'
+        '-.______.-'
+            I.C.C.`;
+
+            // Mostra o logótipo imediatamente
+            logoEl.innerHTML = iccLogo;
+
+            // Linha 1: Identificar a autoridade do sistema
+            setTimeout(() => { t1.innerHTML = "I.C.C. CENTRAL MAINFRAME v4.11 - MAIN TERMINAL ONLINE."; }, 400);
+            
+            // Linha 2: Teste de Memória RAM
+            setTimeout(() => {
+                let ram = 0;
+                let interval = setInterval(() => {
+                    ram += 64;
+                    t2.innerHTML = `DECRYPTING DATA CORE: ${ram}KB OK`;
+                    if (ram >= 640) {
+                        clearInterval(interval);
+                        carregarRestoIntro();
+                    }
+                }, 60);
+            }, 1000);
+
+            function carregarRestoIntro() {
+                // Linha 3: Conexão segura
+                setTimeout(() => { t3.innerHTML = "SECURE NETWORK ACCESS AUTHORIZED BY COLONIAL COUNCIL."; }, 300);
+                
+                // Linha 4: Sequência finalizada
+                setTimeout(() => { t4.innerHTML = "SYSTEM READY. REDIRECTING USER TO DIRECTORY..."; }, 1500);
+
+                // Passa para o botão de entrada
+                setTimeout(() => {
+                    document.getElementById('intro-screen').style.display = 'none';
+                    document.getElementById('boot-header').style.display = 'block';
+                }, 3500);
+            }
+        });
+
+        // --- SISTEMA DE NAVEGAÇÃO ---
         function iniciarPainel() {
             document.getElementById('index-button').style.display = 'none';
             document.getElementById('main-content').style.display = 'block';
@@ -196,11 +276,10 @@
             
             document.getElementById('directory-table').style.display = 'table';
             document.getElementById('cmd-line').style.display = 'flex';
-            document.getElementById('output-box').style.display = 'none'; // Reseta caixa de texto
+            document.getElementById('output-box').style.display = 'none';
             document.getElementById('terminal-input').focus();
         }
 
-        // Nova função para resetar o ecrã e voltar ao botão inicial
         function voltarMenu() {
             document.getElementById('main-content').style.display = 'none';
             document.getElementById('index-button').style.display = 'inline-block';
@@ -208,39 +287,3 @@
         }
 
         const ficheiros = {
-            "01": "FICHEIRO: sobre_mim.txt<br>------------------<br>Olá! Eu sou o smiles035. Desenvolvi este sistema para simular a interface de um terminal clássico da IBM lançado originalmente em 1987.",
-            "02": "FICHEIRO: notas.txt<br>-------------<br>[11/06/2026] - Sistema migrado com sucesso para o GitHub Pages.<br>[11/06/2026] - Atualizada a paleta de cores para Âmbar Fósforo.",
-            "ajuda": "SISTEMA DE AJUDA IBM 3151<br>-------------------------<br>Digite '01' para ler o ficheiro sobre_mim.txt<br>Digite '02' para ler o ficheiro notas.txt<br>Digite 'menu' para retornar ao ecrã inicial.<br>Digite 'limpar' para fechar os ficheiros abertos."
-        };
-
-        const input = document.getElementById('terminal-input');
-        const outputBox = document.getElementById('output-box');
-
-        input.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                const comando = input.value.trim().toLowerCase();
-                
-                if (comando === 'menu') {
-                    voltarMenu();
-                } else if (ficheiros[comando]) {
-                    outputBox.innerHTML = ficheiros[comando];
-                    outputBox.style.display = 'block';
-                } else if (comando === 'limpar') {
-                    outputBox.style.display = 'none';
-                } else if (comando !== "") {
-                    outputBox.innerHTML = `ERRO: O ID '${comando}' não foi reconhecido pelo sistema. Digite 'ajuda' para listar as opções.`;
-                    outputBox.style.display = 'block';
-                }
-                input.value = '';
-            }
-        });
-
-        document.addEventListener('click', () => {
-            const cmdLine = document.getElementById('cmd-line');
-            if (cmdLine && cmdLine.style.display === 'flex') {
-                input.focus();
-            }
-        });
-    </script>
-</body>
-</html>
