@@ -58,7 +58,6 @@
             z-index: 2;
         }
 
-        /* Estilo da Imagem do Logótipo Retro */
         .logo-container {
             display: block;
             margin: 20px auto;
@@ -66,12 +65,11 @@
         }
 
         .retro-logo {
-            max-width: 250px;
+            max-width: 220px;
             height: auto;
-            /* Filtros para misturar a imagem com o fósforo âmbar do ecrã */
-            filter: grayscale(1) sepia(1) saturate(5) hue-rotate(5deg) brightness(0.9) contrast(1.2);
+            /* Filtro avançado para transformar qualquer imagem em fósforo âmbar digitalizado */
+            filter: grayscale(1) sepia(1) saturate(8) hue-rotate(5deg) brightness(1.1) contrast(1.4);
             opacity: 0.85;
-            box-shadow: 0 0 10px rgba(255, 176, 0, 0.2);
         }
 
         .retro-btn {
@@ -94,7 +92,7 @@
             text-shadow: none;
         }
 
-        /* Controlos de Exibição */
+        /* Controlos de Exibição garantidos */
         #intro-screen { display: block; }
         #boot-header { display: none; }
         #main-content { display: none; }
@@ -146,9 +144,9 @@
             <p id="boot-text-2"></p>
             <p id="boot-text-3"></p>
             <p id="boot-text-4"></p>
-            <!-- Contentor do Logótipo (vai aparecer durante o boot) -->
+            <!-- Logótipo I.C.C. integrado de forma estável usando link direto da imagem -->
             <div id="logo-area" class="logo-container" style="display: none;">
-                <img src="logo.png" alt="I.C.C. Logo" class="retro-logo">
+                <img src="https://googleapis.com" alt="I.C.C. Logo" class="retro-logo">
             </div>
         </div>
 
@@ -206,7 +204,7 @@
     </div>
 
     <script>
-        // --- ANIMAÇÃO DE BOOT SEGURO ---
+        // SISTEMA DE CORRIDA DE BOOT SEM TRAVAMENTO
         window.addEventListener('DOMContentLoaded', () => {
             const t1 = document.getElementById('boot-text-1');
             const t2 = document.getElementById('boot-text-2');
@@ -214,10 +212,10 @@
             const t4 = document.getElementById('boot-text-4');
             const logoArea = document.getElementById('logo-area');
 
-            // Passo 1: Iniciar log de hardware
-            setTimeout(() => { t1.innerHTML = "IBM BIOS CORE v0.87 - COPYRIGHT IBM CORP 1987."; }, 200);
+            // Linha 1 aparece imediatamente
+            setTimeout(() => { t1.innerHTML = "IBM BIOS CORE v0.87 - COPYRIGHT IBM CORP 1987."; }, 100);
             
-            // Passo 2: Contagem RAM
+            // Linha 2 contagem rápida da memória RAM
             setTimeout(() => {
                 let ram = 0;
                 let interval = setInterval(() => {
@@ -225,23 +223,24 @@
                     t2.innerHTML = `TESTING SYSTEM RAM: ${ram}KB OK`;
                     if (ram >= 640) {
                         clearInterval(interval);
-                        // Passo 3: Mostrar Conexão e fazer o Logótipo aparecer
-                        setTimeout(() => { 
-                            t3.innerHTML = "CONNECTING TO HOST AT I.C.C. MAIN FRAME... ESTABLISHED."; 
-                            logoArea.style.display = "block"; // Revela o logótipo aqui
-                        }, 200);
                         
-                        // Passo 4: Conclusão
-                        setTimeout(() => { t4.innerHTML = "BOOT SEQUENCE COMPLETE. INITIALIZING INTERFACE..."; }, 1400);
+                        // Linha 3 e o Logótipo aparecem logo após a RAM
+                        setTimeout(() => { 
+                            t3.innerHTML = "CONNECTING TO HOST AT I.C.C. REPOSITORY... ESTABLISHED."; 
+                            logoArea.style.display = "block"; 
+                        }, 100);
+                        
+                        // Linha 4 conclusão
+                        setTimeout(() => { t4.innerHTML = "BOOT SEQUENCE COMPLETE. PRESS START BUTTON."; }, 1000);
 
-                        // Passo 5: Transição para o Menu Principal
+                        // Avança automaticamente para o ecrã do botão
                         setTimeout(() => {
                             document.getElementById('intro-screen').style.display = 'none';
                             document.getElementById('boot-header').style.display = 'block';
-                        }, 3000);
+                        }, 2600);
                     }
-                }, 50);
-            }, 600);
+                }, 40);
+            }, 400);
         });
 
         function iniciarPainel() {
