@@ -48,17 +48,17 @@
             z-index: 2;
         }
 
-        /* LOGÓTIPO FIXO NO CANTO SUPERIOR ESQUERDO */
+        /* AJUSTE DO LOGÓTIPO DO CANTO */
         .corner-logo {
             position: absolute;
             top: -20px;
             left: 0;
-            max-width: 100px; /* Tamanho reduzido para caber discretamente no canto */
+            max-width: 90px; /* Tamanho calibrado para o canto */
             height: auto;
             mix-blend-mode: screen; 
             filter: brightness(1.2) contrast(1.5) sepia(1) saturate(12) hue-rotate(5deg);
             opacity: 0.85;
-            display: none; /* Escondido apenas durante o teste de boot inicial */
+            display: none;
         }
 
         .logo-container {
@@ -128,7 +128,6 @@
             display: none;
         }
 
-        /* Empurra o cabeçalho para o lado para não chocar com o logo */
         .header-text {
             margin-left: 120px;
         }
@@ -136,8 +135,8 @@
 </head>
 <body>
     <div class="terminal">
-        <!-- Logótipo Fixo Permanente (Ativado via JS após o Boot) -->
-        <img id="static-logo" src="https://googleapis.com" alt="I.C.C. Corner Logo" class="corner-logo">
+        <!-- Corrigido: Agora aponta diretamente para o seu ficheiro local logo.png -->
+        <img id="static-logo" src="logo.png" alt="Logo" class="corner-logo">
 
         <!-- INTRO -->
         <div id="intro-screen" style="display: block;">
@@ -145,7 +144,7 @@
             <p id="boot-2"></p>
             <p id="boot-3"></p>
             <div id="logo-area" class="logo-container" style="display: none;">
-                <img src="https://googleapis.com" alt="I.C.C. Logo" class="retro-logo">
+                <img src="logo.png" alt="Logo" class="retro-logo">
             </div>
         </div>
 
@@ -201,10 +200,8 @@
                 document.getElementById('logo-area').style.display = "block";
             }, 1400);
             setTimeout(() => {
-                // Desliga a intro e liga o menu
                 document.getElementById('intro-screen').style.display = "none";
                 document.getElementById('boot-header').style.display = "block";
-                // Ativa o logótipo permanente no canto
                 document.getElementById('static-logo').style.display = "block";
             }, 4500);
         });
