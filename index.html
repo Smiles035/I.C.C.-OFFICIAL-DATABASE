@@ -7,7 +7,7 @@
     <style>
         @import url('https://googleapis.com');
 
-        /* 1. ANIMAÇÕES RETRO (Cintilação do Ecrã) */
+        /* ANIMAÇÕES RETRO (Cintilação do Ecrã) */
         @keyframes crt-flicker {
             0% { opacity: 0.985; }
             50% { opacity: 1; }
@@ -15,7 +15,7 @@
         }
 
         body {
-            background-color: #030200; /* Preto profundo levemente quente */
+            background-color: #030200; 
             color: #ffb000; /* Âmbar IBM Clássico */
             font-family: 'VT323', monospace;
             font-size: 24px;
@@ -23,12 +23,10 @@
             padding: 40px 20px;
             box-sizing: border-box;
             text-shadow: 0 0 6px rgba(255, 176, 0, 0.6);
-            
-            /* Aplica a animação de cintilação analógica a todo o ecrã */
             animation: crt-flicker 0.15s infinite;
         }
 
-        /* 2. OVERLAY PARA LINHAS CRT E CURVATURA DO VIDRO */
+        /* OVERLAY PARA LINHAS CRT E CURVATURA DO VIDRO */
         body::before {
             content: " ";
             display: block;
@@ -36,15 +34,13 @@
             top: 0; left: 0; bottom: 0; right: 0;
             z-index: 10;
             pointer-events: none;
-
-            /* Linhas horizontais (scanlines) misturadas com uma sombra radial nas bordas (vignette) */
             background: 
                 linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.45) 50%),
                 radial-gradient(circle, rgba(0,0,0,0) 40%, rgba(0,0,0,0.85) 100%);
             background-size: 100% 5px, 100% 100%;
         }
 
-        /* 3. PEQUENO GLAR DE LUZ NO CENTRO DO ECRÃ (Simula fósforo ativo) */
+        /* GLAR DE LUZ NO CENTRO DO ECRÃ */
         body::after {
             content: " ";
             display: block;
@@ -187,6 +183,38 @@
     </div>
 
     <script>
+        // --- SISTEMA DE ÁUDIO RETRO ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        // Função para gerar o som de clique ao digitar
+        function playKeySound() {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'triangle'; 
+            osc.frequency.setValueAtTime(120, audioCtx.currentTime); // Tom grave e mecânico
+            gain.gain.setValueAtTime(0.05, audioCtx.currentTime); // Volume baixo para não irritar
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.03); // Desvanece rápido
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.03);
+        }
+
+        // Função para gerar o 'Bip' do Enter
+        function playBeepSound() {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(800, audioCtx.currentTime); // Tom agudo eletrónico
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.15);
+        }
+
+        // --- LÓGICA DO TERMINAL ---
         const ficheiros = {
             "01": "FICHEIRO: sobre_mim.txt<br>------------------<br>Olá! Eu sou o smiles035. Desenvolvi este sistema para simular a interface de um terminal clássico da IBM lançado originalmente em 1987.",
             "02": "FICHEIRO: notas.txt<br>-------------<br>[11/06/2026] - Sistema migrado com sucesso para o GitHub Pages.<br>[11/06/2026] - Atualizada a paleta de cores para Âmbar Fósforo.",
@@ -196,8 +224,11 @@
         const input = document.getElementById('terminal-input');
         const outputBox = document.getElementById('output-box');
 
+        // Captura o que é digitado
         input.addEventListener('keydown', function(e) {
+            // Se for Enter, toca o Bip e processa o comando
             if (e.key === 'Enter') {
+                playBeepSound();
                 const comando = input.value.trim().toLowerCase();
                 
                 if (ficheiros[comando]) {
@@ -210,6 +241,9 @@
                     outputBox.style.display = 'block';
                 }
                 input.value = '';
+            } else if (e.key !== 'Shift' && e.key !== 'Control' && e.key !== 'Alt') {
+                // Toca o som mecânico para qualquer outra tecla normal digitada
+                playKeySound();
             }
         });
 
