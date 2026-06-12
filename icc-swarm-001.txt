@@ -1,20 +1,15 @@
 INTERPLANETARY COLONIAL COUNCIL
-
 XENOBIOLOGICAL THREAT DOSSIER
 
 --------------------------------------------------
 
 FILE ID: ICC-SWARM-001
-
 CLEARANCE LEVEL: RESTRICTED
-
 STATUS: ACTIVE THREAT
 
 --------------------------------------------------
 
-DESIGNATION:
-
-The Swarm
+DESIGNATION: The Swarm
 
 SCIENTIFIC CLASSIFICATION:
 
