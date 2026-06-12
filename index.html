@@ -137,12 +137,12 @@
     <div class="terminal">
         <img id="static-logo" src="logo.png" alt="Logo" class="corner-logo">
 
-        <!-- BOTÃO DE ENERGIA (Garante que os sons funcionam sem bloqueio do browser) -->
+        <!-- BOTÃO DE ENERGIA INICIAL -->
         <div id="power-on-screen">
-            <button class="retro-btn" onclick="ligarMonitor()">[ LIGAR TERMINAL IBM 3151 ]</button>
+            <button id="btn-power" class="retro-btn">[ LIGAR TERMINAL IBM 3151 ]</button>
         </div>
 
-        <!-- INTRO COM ANIMAÇÃO TYPEWRITER -->
+        <!-- INTRODUÇÃO -->
         <div id="intro-screen">
             <p id="boot-1"></p>
             <p id="boot-2"></p>
@@ -158,11 +158,11 @@
                 <p>IBM 3151 ASCII DISPLAY STATION — V1.0</p>
                 <p>SISTEMA OPERATIVO RETRO CARREGADO COM SUCESSO.</p>
                 <hr style="border: 1px dashed #ffb000;">
-                <button class="retro-btn" onclick="iniciarPainel()">[ ACEDER AO DIRETÓRIO PRINCIPAL ]</button>
+                <button id="btn-access" class="retro-btn">[ ACEDER AO DIRETÓRIO PRINCIPAL ]</button>
             </div>
         </div>
 
-        <!-- PAINEL DE COMANDOS (TABELA COM IDS OCULTOS) -->
+        <!-- PAINEL PRINCIPAL -->
         <div id="main-content" style="display: none;">
             <div class="header-text">
                 <p>[ DIRETÓRIO SECRETO I.C.C. ]</p>
@@ -178,7 +178,6 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <!-- Os IDs 01 e 02 foram removidos daqui, mas funcionam no comando -->
                     <tr><td>ajuda</td><td>ajuda.sys</td><td>PÚBLICO</td></tr>
                     <tr><td>limpar</td><td>limpar.sys</td><td>PÚBLICO</td></tr>
                 </tbody>
@@ -191,14 +190,21 @@
                 <input type="text" id="terminal-input" autocomplete="off" placeholder="Insira credencial...">
             </div>
             <br>
-            <button class="retro-btn" onclick="voltarMenu()">[ VOLTAR AO INÍCIO ]</button>
+            <button id="btn-back" class="retro-btn">[ VOLTAR AO INÍCIO ]</button>
         </div>
     </div>
 
     <script>
         let audioCtx = null;
 
-        // Gerador de Som das Teclas Mecânicas
+        function initAudio() {
+            if (!audioCtx) {
+                try {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                } catch(e) { console.log("Áudio bloqueado"); }
+            }
+        }
+
         function playKeySound() {
             if (!audioCtx) return;
             try {
@@ -206,7 +212,7 @@
                 const gain = audioCtx.createGain();
                 osc.type = 'triangle'; 
                 osc.frequency.setValueAtTime(130, audioCtx.currentTime);
-                gain.gain.setValueAtTime(0.03, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.02, audioCtx.currentTime);
                 gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.02);
                 osc.connect(gain);
                 gain.connect(audioCtx.destination);
@@ -222,7 +228,7 @@
                 const gain = audioCtx.createGain();
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(700, audioCtx.currentTime);
-                gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
                 gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
                 osc.connect(gain);
                 gain.connect(audioCtx.destination);
@@ -231,10 +237,10 @@
             } catch(e) {}
         }
 
-        // Função de Escrita Letra a Letra com Som
         function typeWriter(elementId, text, speed, callback) {
             let i = 0;
             const element = document.getElementById(elementId);
+            if (!element) return;
             element.innerHTML = "";
             
             function type() {
@@ -250,17 +256,16 @@
             type();
         }
 
-        // Ligar o monitor e correr a Intro com som garantido
-        function ligarMonitor() {
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            playBeepSound();
-            
+        // Configuração dos botões
+        document.getElementById('btn-power').addEventListener('click', () => {
             document.getElementById('power-on-screen').style.display = "none";
             document.getElementById('intro-screen').style.display = "block";
+            
+            initAudio();
+            playBeepSound();
 
-            // Inicia a sequência de boot falada letra a letra
-            typeWriter("boot-1", "IBM BIOS CORE v0.87 - CORP 1987.", 30, () => {
-                typeWriter("boot-2", "SYSTEM RAM: 640KB OK (SECURE CHANNEL ACTIVATED)", 20, () => {
+            typeWriter("boot-1", "IBM BIOS CORE v0.87 - CORP 1987.", 25, () => {
+                typeWriter("boot-2", "SYSTEM RAM: 640KB OK (SECURE CHANNEL ACTIVATED)", 15, () => {
                     playBeepSound();
                     document.getElementById('boot-3').innerHTML = "CONNECTING TO I.C.C. CODES CORE...";
                     document.getElementById('logo-area').style.display = "block";
@@ -270,13 +275,17 @@
                         document.getElementById('boot-header').style.display = "block";
                         document.getElementById('static-logo').style.display = "block";
                         playBeepSound();
-                    }, 2500);
+                    }, 2000);
                 });
             });
-        }
+        });
 
-        function iniciarPainel() {
+        document.getElementById('btn-access').addEventListener('click', () => {
+            initAudio();
             playBeepSound();
             document.getElementById('boot-header').style.display = "none";
             document.getElementById('main-content').style.display = "block";
             document.getElementById('output-box').style.display = "none";
+            document.getElementById('terminal-input').focus();
+        });
+
