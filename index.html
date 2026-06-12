@@ -5,12 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Terminal IBM 3151</title>
     <style>
+        /* CORREÇÃO: Import correto da fonte VT323 */
         @import url('https://googleapis.com');
 
         @keyframes crt-flicker {
             0% { opacity: 0.98; }
             50% { opacity: 1; }
             100% { opacity: 0.99; }
+        }
+
+        /* ANIMAÇÃO: Cursor a piscar */
+        @keyframes blink {
+            50% { border-color: transparent; }
         }
 
         body {
@@ -103,7 +109,13 @@
 
         th { background-color: rgba(255, 176, 0, 0.2); }
 
-        .input-line { display: flex; align-items: center; }
+        /* DESIGN: Ajuste para simular o cursor real do terminal */
+        .input-wrapper {
+            display: flex;
+            align-items: center;
+            position: relative;
+            width: 100%;
+        }
 
         #terminal-input {
             background: transparent;
@@ -114,6 +126,21 @@
             outline: none;
             width: 100%;
             text-shadow: 0 0 6px rgba(255, 176, 0, 0.6);
+            caret-color: transparent; /* Esconde o cursor nativo do browser */
+        }
+
+        /* CURSOR RETRO: Bloco sólido a piscar a seguir ao texto */
+        .input-wrapper::after {
+            content: "";
+            position: absolute;
+            left: var(--cursor-pos, 0px); /* Atualizado dinamicamente via JS */
+            width: 12px;
+            height: 24px;
+            background: #ffb000;
+            animation: blink 0.8s infinite;
+            pointer-events: none;
+            box-shadow: 0 0 6px rgba(255, 176, 0, 0.6);
+            display: inline-block;
         }
 
         #output-box {
@@ -124,7 +151,7 @@
             display: none;
         }
 
-        .header-text { margin-left: 120px; }
+        .header-text { margin-left: 0px; } /* Ajustado para melhor alinhamento */
         
         #intro-screen { display: none; }
         #power-on-screen { display: block; text-align: center; margin-top: 100px; }
@@ -182,9 +209,9 @@
 
             <div id="output-box"></div>
             <br>
-            <div class="input-line">
+            <div class="input-wrapper">
                 <span>COMANDO:> &nbsp;</span>
-                <input type="text" id="terminal-input" autocomplete="off" placeholder="Insira credencial...">
+                <input type="text" id="terminal-input" autocomplete="off" placeholder="">
             </div>
             <br>
             <button id="btn-back" class="retro-btn">[ VOLTAR AO INÍCIO ]</button>
@@ -192,7 +219,7 @@
     </div>
 
     <script>
-        // Animação Typewriter 100% Visual e Segura (Sem Áudio)
+        // Animação Typewriter
         function typeWriter(elementId, text, speed, callback) {
             let i = 0;
             const element = document.getElementById(elementId);
@@ -211,12 +238,24 @@
             type();
         }
 
-        // Evento de Clique Blindado
+        // Lógica do Cursor Retro Dinâmico
+        const inputEl = document.getElementById('terminal-input');
+        const wrapperEl = document.querySelector('.input-wrapper');
+        
+        function updateCursorPosition() {
+            // Calcula de forma simples a posição do bloco do cursor baseado nos caracteres digitados
+            const textLength = inputEl.value.length;
+            const offset = 110 + (textLength * 13.2); // Valores aproximados para a fonte VT323
+            wrapperEl.style.setProperty('--cursor-pos', `${offset}px`);
+        }
+        
+        inputEl.addEventListener('input', updateCursorPosition);
+
+        // Evento de Clique: Ligar o Terminal
         document.getElementById('btn-power').addEventListener('click', () => {
             document.getElementById('power-on-screen').style.display = "none";
             document.getElementById('intro-screen').style.display = "block";
 
-            // Executa a sequência visual sem risco de travar por falta de permissão de áudio
             typeWriter("boot-1", "IBM BIOS CORE v0.87 - CORP 1987.", 20, () => {
                 typeWriter("boot-2", "SYSTEM RAM: 640KB OK (SECURE CHANNEL ACTIVATED)", 10, () => {
                     document.getElementById('boot-3').innerHTML = "CONNECTING TO I.C.C. CODES CORE... ESTABLISHED.";
@@ -231,40 +270,17 @@
             });
         });
 
+        // Evento de Clique: Aceder ao Diretório
         document.getElementById('btn-access').addEventListener('click', () => {
             document.getElementById('boot-header').style.display = "none";
             document.getElementById('main-content').style.display = "block";
             document.getElementById('output-box').style.display = "none";
-            document.getElementById('terminal-input').focus();
+            inputEl.focus();
+            updateCursorPosition();
         });
 
+        // CORREÇÃO: Conclusão do botão Voltar
         document.getElementById('btn-back').addEventListener('click', () => {
             document.getElementById('main-content').style.display = "none";
-            document.getElementById('boot-header').style.display = "block";
-        });
-
-        // Configuração dos ficheiros secretos
-        const ficheiros = {
-            "01": "FICHEIRO CONFIDENCIAL: sobre_mim.txt<br>------------------------------------<br>AUTOR DO SISTEMA: smiles035.<br>ESTADO: ADMINISTRADOR DE SISTEMAS DA I.C.C.",
-            "02": "FICHEIRO CONFIDENCIAL: notas.txt<br>--------------------------------<br>SISTEMA CRIPTOGRAFADO DE ALTA SEGURANÇA. TODOS OS ACESSOS FORAM REGISTADOS.",
-            "ajuda": "SISTEMA DE AJUDA PROTOCOLO IBM<br>------------------------------<br>Insira um ID confidencial numérico no comando para decifrar os ficheiros ocultos.<br>Digite '01' ou '02' na linha de comandos.<br>Digite 'limpar' para fechar o leitor de dados."
-        };
-
-        const input = document.getElementById('terminal-input');
-        const outputBox = document.getElementById('output-box');
-
-        input.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                const comando = input.value.trim().toLowerCase();
-                if (comando === 'menu') {
-                    document.getElementById('btn-back').click();
-                } else if (ficheiros[comando]) {
-                    outputBox.innerHTML = ficheiros[comando];
-                    outputBox.style.display = 'block';
-                } else if (comando === 'limpar') {
-                    outputBox.style.display = 'none';
-                } else if (comando !== "") {
-                    outputBox.innerHTML = "ACESSO NEGADO: Credencial '" + comando + "' inválida ou inexistente.";
-                    outputBox.style.display = 'block';
-                }
-                input.value = '';
+            document.getElementById('static-logo').style.display = "none";
+            document.getElementById('power-on-screen').style.display = "block";
