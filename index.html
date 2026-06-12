@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Terminal IBM 3151</title>
+    <title>INTERPLANETARY COLONIAL COUNCIL DATABASE.</title>
     <style>
         @import url('https://googleapis.com');
         @keyframes crt-flicker { 0% { opacity: 0.98; } 50% { opacity: 1; } 100% { opacity: 0.99; } }
@@ -39,28 +39,28 @@
             <div id="logo-area" class="logo-container" style="display: none;"><img src="logo.png" alt="Logo" class="retro-logo"></div>
         </div>
         <div id="boot-header" style="display: none;">
-            <p>IBM 3151 ASCII DISPLAY STATION — V1.0</p>
-            <p>SISTEMA OPERATIVO RETRO CARREGADO COM SUCESSO.</p>
+            <p>I.C.C. DATABASE DISPLAY STATION — V1.0</p>
+            <p>OPERATIVE SYSTEM LOADED WITH SUCCESS.</p>
             <hr style="border: 1px dashed #ffb000;">
-            <button id="btn-access" class="retro-btn">[ ACEDER AO DIRETÓRIO PRINCIPAL ]</button>
+            <button id="btn-access" class="retro-btn">[ ACCESSING PRINCIPAL DIRECTORY ]</button>
         </div>
         <div id="main-content" style="display: none;">
-            <p>[ DIRETÓRIO SECRETO I.C.C. ]</p>
-            <p>Aviso: Os IDs de ficheiros confidenciais estão ocultos do índice.</p>
+            <p>[ CLEARANCE LEVEL RESTRICTED ]</p>
+            <p>Warning: The IDs of the files are confidential and are occult in the index</p>
             <table>
-                <thead><tr><th>ID</th><th>NOME DO FICHEIRO</th><th>ESTADO DE ACESSO</th></tr></thead>
+                <thead><tr><th>ID</th><th>FILE NAME</th><th>ACCESS STATE</th></tr></thead>
                 <tbody>
-                    <tr><td>ajuda</td><td>ajuda.sys</td><td>PÚBLICO</td></tr>
-                    <tr><td>limpar</td><td>limpar.sys</td><td>PÚBLICO</td></tr>
+                    <tr><td>Help</td><td>Help.sys</td><td>PUBLIC</td></tr>
+                    <tr><td>Clean</td><td>Clean.Sys</td><td>PUBLIC</td></tr>
                 </tbody>
             </table>
             <div id="output-box"></div><br>
-            <div class="input-wrapper"><span>COMANDO:> &nbsp;</span><input type="text" id="terminal-input" autocomplete="off"></div><br>
-            <button id="btn-back" class="retro-btn">[ VOLTAR AO MENU ]</button>
+            <div class="input-wrapper"><span>COMMAND:> &nbsp;</span><input type="text" id="terminal-input" autocomplete="off"></div><br>
+            <button id="btn-back" class="retro-btn">[ MENU ]</button>
         </div>
         <div id="file-content-screen">
             <div id="file-text-area"></div><br><hr style="border: 1px dashed #ffb000;"><br>
-            <button id="btn-close-file" class="retro-btn">[ VOLTAR AO DIRETÓRIO ]</button>
+            <button id="btn-close-file" class="retro-btn">[ GO BACK TO DIRECTORY ]</button>
         </div>
     </div>
     <script>
@@ -75,9 +75,9 @@
         if (inputEl) inputEl.addEventListener('input', updateCursor);
         function startTerminalBoot() {
             document.getElementById('main-content').style.display = "none"; document.getElementById('boot-header').style.display = "none"; document.getElementById('static-logo').style.display = "none"; document.getElementById('file-content-screen').style.display = "none"; document.getElementById('intro-screen').style.display = "block"; document.getElementById('logo-area').style.display = "none"; document.getElementById('boot-3').innerHTML = "";
-            typeWriter("boot-1", "IBM BIOS CORE v0.87 - CORP 1987.", 20, () => {
+            typeWriter("boot-1", "O.V.I.S. BIO CORES v7.4.18 - I.C.C. 1955.", 20, () => {
                 typeWriter("boot-2", "SYSTEM RAM: 640KB OK (SECURE CHANNEL ACTIVATED)", 10, () => {
-                    document.getElementById('boot-3').innerHTML = "CONNECTING TO I.C.C. CODES CORE... ESTABLISHED."; document.getElementById('logo-area').style.display = "block";
+                    document.getElementById('boot-3').innerHTML = "CONNECTING TO I.C.C. CODE CORES... ESTABLISHED."; document.getElementById('logo-area').style.display = "block";
                     setTimeout(() => { document.getElementById('intro-screen').style.display = "none"; document.getElementById('boot-header').style.display = "block"; document.getElementById('static-logo').style.display = "block"; }, 2000);
                 });
             });
@@ -101,7 +101,7 @@
                 .catch(() => {
                     const out = document.getElementById('output-box');
                     out.style.display = "block";
-                    out.innerHTML = `ERRO CRÍTICO: Falha ao ler o ficheiro '${nomeFicheiro}' no servidor.`;
+                    out.innerHTML = `CRITICAL ERROR: error reading the file '${nomeFicheiro}' no servidor.`;
                 });
         }
 
@@ -112,10 +112,10 @@
                     const out = document.getElementById('output-box'); 
                     out.style.display = "none";
                     
-                    if (cmd === 'ajuda') { carregarFicheiro('ajuda.txt'); } 
-                    else if (cmd === 'limpar') { out.innerHTML = ""; } 
-                    else if (cmd === 'admin' || cmd === 'segredo' || cmd === 'icc-exec-001') { carregarFicheiro('icc-exec-001.txt'); }
-                    else if (cmd !== "") { out.style.display = "block"; out.innerHTML = `ERRO: Comando '${cmd}' não reconhecido.`; }
+                    if (cmd === 'Help') { carregarFicheiro('Help.txt'); } 
+                    else if (cmd === 'Clean') { out.innerHTML = ""; } 
+                    else if (cmd === 'AdministratorKryion1955' || cmd === 'Restricted' || cmd === 'icc-exec-001') { carregarFicheiro('icc-exec-001.txt'); }
+                    else if (cmd !== "") { out.style.display = "block"; out.innerHTML = `ERROR: Command '${cmd}' Not acknowledged.`; }
                     inputEl.value = ""; updateCursor();
                 }
             });
