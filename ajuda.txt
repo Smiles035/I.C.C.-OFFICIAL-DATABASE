@@ -1,0 +1,2 @@
+[ SISTEMA DE AJUDA IBM ]
+Introduza códigos válidos na linha de comandos para ler o conteúdo dos ficheiros do terminal.
