@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Terminal IBM 3151</title>
+    <title>IBM 3151 Terminal</title>
     <style>
         @import url('https://googleapis.com');
         @keyframes crt-flicker { 0% { opacity: 0.98; } 50% { opacity: 1; } 100% { opacity: 0.99; } }
@@ -35,27 +35,27 @@
         </div>
         <div id="boot-header" style="display: none;">
             <p>IBM 3151 ASCII DISPLAY STATION — V1.0</p>
-            <p>SISTEMENT OPERATIVO RETRO CARREGADO COM SUCESSO.</p>
+            <p>RETRO OPERATING SYSTEM LOADED SUCCESSFULLY.</p>
             <hr style="border: 1px dashed #ffb000;">
-            <button id="btn-access" class="retro-btn">[ ACEDER AO DIRETÓRIO PRINCIPAL ]</button>
+            <button id="btn-access" class="retro-btn">[ ACCESS MAIN DIRECTORY ]</button>
         </div>
         <div id="main-content" style="display: none;">
-            <p>[ DIRETÓRIO SECRETO I.C.C. ]</p>
-            <p>Aviso: Os IDs de ficheiros confidenciais<br>estão ocultos do índice.</p>
+            <p>[ I.C.C. SECRET DIRECTORY ]</p>
+            <p>Warning: Confidential file IDs<br>are hidden from the index.</p>
             <table>
-                <thead><tr><th>ID</th><th>NOME DO FICHEIRO</th><th>ESTADO DE ACESSO</th></tr></thead>
+                <thead><tr><th>ID</th><th>FILE NAME</th><th>ACCESS STATUS</th></tr></thead>
                 <tbody>
-                    <tr><td>ajuda</td><td>ajuda.sys</td><td>PÚBLICO</td></tr>
-                    <tr><td>limpar</td><td>limpar.sys</td><td>PÚBLICO</td></tr>
+                    <tr><td>help</td><td>help.sys</td><td>PUBLIC</td></tr>
+                    <tr><td>clear</td><td>clear.sys</td><td>PUBLIC</td></tr>
                 </tbody>
             </table>
             <div id="output-box"></div><br>
-            <div class="input-wrapper"><span>COMANDO:> &nbsp;</span><input type="text" id="terminal-input" autocomplete="off"></div><br>
-            <button id="btn-back" class="retro-btn">[ VOLTAR AO MENU ]</button>
+            <div class="input-wrapper"><span>COMMAND:> &nbsp;</span><input type="text" id="terminal-input" autocomplete="off"></div><br>
+            <button id="btn-back" class="retro-btn">[ RETURN TO MENU ]</button>
         </div>
         <div id="file-content-screen">
             <div id="file-text-area"></div><br><hr style="border: 1px dashed #ffb000;"><br>
-            <button id="btn-close-file" class="retro-btn">[ VOLTAR AO DIRETÓRIO ]</button>
+            <button id="btn-close-file" class="retro-btn">[ RETURN TO DIRECTORY ]</button>
         </div>
     </div>
     <script>
@@ -96,7 +96,7 @@
                 .catch(() => {
                     const out = document.getElementById('output-box');
                     out.style.display = "block";
-                    out.innerHTML = `ERRO CRÍTICO: Falha ao ler o ficheiro '${nomeFicheiro}' no servidor.`;
+                    out.innerHTML = `CRITICAL ERROR: Failed to read file '${nomeFicheiro}' from server.`;
                 });
         }
 
@@ -107,12 +107,12 @@
                     const out = document.getElementById('output-box'); 
                     out.style.display = "none";
                     
-                    if (cmd === 'ajuda') { carregarFicheiro('ajuda.txt'); } 
-                    else if (cmd === 'limpar') { out.innerHTML = ""; } 
+                    /* Tradução dos comandos da tabela */
+                    if (cmd === 'help' || cmd === 'ajuda') { carregarFicheiro('ajuda.txt'); } 
+                    else if (cmd === 'clear' || cmd === 'limpar') { out.innerHTML = ""; } 
                     else if (cmd === 'admin' || cmd === 'segredo' || cmd === 'icc-exec-001') { carregarFicheiro('icc-exec-001.txt'); }
-                    /* ADIÇÃO: Reconhecer o novo ficheiro icc-swarm-001.txt */
                     else if (cmd === 'swarm' || cmd === 'enxame' || cmd === 'icc-swarm-001') { carregarFicheiro('icc-swarm-001.txt'); }
-                    else if (cmd !== "") { out.style.display = "block"; out.innerHTML = `ERRO: Comando '${cmd}' não reconhecido.`; }
+                    else if (cmd !== "") { out.style.display = "block"; out.innerHTML = `ERROR: Command '${cmd}' not recognized.`; }
                     inputEl.value = ""; updateCursor();
                 }
             });
@@ -120,3 +120,4 @@
     </script>
 </body>
 </html>
+
