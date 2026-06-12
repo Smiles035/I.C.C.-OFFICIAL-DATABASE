@@ -8,22 +8,10 @@
         @import url('https://googleapis.com');
         @keyframes crt-flicker { 0% { opacity: 0.98; } 50% { opacity: 1; } 100% { opacity: 0.99; } }
         @keyframes blink { 50% { border-color: transparent; } }
-        body {
-            background-color: #030200; color: #ffb000; font-family: 'VT323', monospace;
-            font-size: 24px; margin: 0; padding: 40px 20px; box-sizing: border-box;
-            text-shadow: 0 0 6px rgba(255, 176, 0, 0.6); animation: crt-flicker 0.15s infinite;
-        }
-        body::before {
-            content: " "; display: block; position: fixed; top: 0; left: 0; bottom: 0; right: 0;
-            z-index: 10; pointer-events: none;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.45) 50%), radial-gradient(circle, rgba(0,0,0,0) 40%, rgba(0,0,0,0.85) 100%);
-            background-size: 100% 5px, 100% 100%;
-        }
+        body { background-color: #030200; color: #ffb000; font-family: 'VT323', monospace; font-size: 24px; margin: 0; padding: 40px 20px; box-sizing: border-box; text-shadow: 0 0 6px rgba(255, 176, 0, 0.6); animation: crt-flicker 0.15s infinite; }
+        body::before { content: " "; display: block; position: fixed; top: 0; left: 0; bottom: 0; right: 0; z-index: 10; pointer-events: none; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.45) 50%), radial-gradient(circle, rgba(0,0,0,0) 40%, rgba(0,0,0,0.85) 100%); background-size: 100% 5px, 100% 100%; }
         .terminal { max-width: 900px; margin: 0 auto; position: relative; z-index: 2; }
-        
-        /* CORREÇÃO: Posicionado no canto superior direito para não tapar o texto */
         .corner-logo { position: absolute; top: -20px; right: 0; max-width: 120px; height: auto; mix-blend-mode: screen; filter: brightness(1.2) contrast(1.5) sepia(1) saturate(12) hue-rotate(5deg); opacity: 0.85; display: none; }
-        
         .logo-container { display: block; margin: 25px auto; text-align: center; }
         .retro-logo { max-width: 260px; height: auto; mix-blend-mode: screen; filter: brightness(1.2) contrast(1.5) sepia(1) saturate(12) hue-rotate(5deg); opacity: 0.9; }
         .retro-btn { background: transparent; border: 2px solid #ffb000; color: #ffb000; font-family: 'VT323', monospace; font-size: 26px; padding: 10px 20px; cursor: pointer; text-shadow: 0 0 6px rgba(255, 176, 0, 0.6); margin: 20px 0; display: inline-block; }
@@ -35,27 +23,22 @@
         #terminal-input { background: transparent; border: none; color: #ffb000; font-family: 'VT323', monospace; font-size: 24px; outline: none; width: 100%; text-shadow: 0 0 6px rgba(255, 176, 0, 0.6); caret-color: transparent; }
         .input-wrapper::after { content: ""; position: absolute; left: var(--cursor-pos, 0px); width: 12px; height: 24px; background: #ffb000; animation: blink 0.8s infinite; pointer-events: none; box-shadow: 0 0 6px rgba(255, 176, 0, 0.6); display: inline-block; }
         #output-box { margin-top: 20px; padding: 15px; border: 1px solid #ffb000; background: rgba(255, 176, 0, 0.03); display: none; }
+        #file-content-screen { display: none; border: 1px dashed #ffb000; padding: 25px; background: rgba(255, 176, 0, 0.02); margin-top: 20px; }
     </style>
 </head>
 <body>
     <div class="terminal">
         <img id="static-logo" src="logo.png" alt="Logo" class="corner-logo">
-
-        <!-- INTRODUÇÃO -->
         <div id="intro-screen">
             <p id="boot-1"></p><p id="boot-2"></p><p id="boot-3"></p>
             <div id="logo-area" class="logo-container" style="display: none;"><img src="logo.png" alt="Logo" class="retro-logo"></div>
         </div>
-
-        <!-- MENU INICIAL / ÍNDICE -->
         <div id="boot-header" style="display: none;">
             <p>IBM 3151 ASCII DISPLAY STATION — V1.0</p>
             <p>SISTEMA OPERATIVO RETRO CARREGADO COM SUCESSO.</p>
             <hr style="border: 1px dashed #ffb000;">
             <button id="btn-access" class="retro-btn">[ ACEDER AO DIRETÓRIO PRINCIPAL ]</button>
         </div>
-
-        <!-- PAINEL PRINCIPAL -->
         <div id="main-content" style="display: none;">
             <p>[ DIRETÓRIO SECRETO I.C.C. ]</p>
             <p>Aviso: Os IDs de ficheiros confidenciais estão ocultos do índice.</p>
@@ -67,14 +50,14 @@
                 </tbody>
             </table>
             <div id="output-box"></div><br>
-            <div class="input-wrapper">
-                <span>COMANDO:> &nbsp;</span>
-                <input type="text" id="terminal-input" autocomplete="off">
-            </div><br>
+            <div class="input-wrapper"><span>COMANDO:> &nbsp;</span><input type="text" id="terminal-input" autocomplete="off"></div><br>
             <button id="btn-back" class="retro-btn">[ VOLTAR AO MENU ]</button>
         </div>
+        <div id="file-content-screen">
+            <div id="file-text-area"></div><br><hr style="border: 1px dashed #ffb000;"><br>
+            <button id="btn-close-file" class="retro-btn">[ VOLTAR AO DIRETÓRIO ]</button>
+        </div>
     </div>
-
     <script>
         function typeWriter(id, text, speed, cb) {
             let i = 0; const el = document.getElementById(id); if (!el) return; el.innerHTML = "";
@@ -83,58 +66,29 @@
         }
         const inputEl = document.getElementById('terminal-input');
         const wrapperEl = document.querySelector('.input-wrapper');
-        function updateCursor() {
-            if (!inputEl || !wrapperEl) return;
-            wrapperEl.style.setProperty('--cursor-pos', `${110 + (inputEl.value.length * 13.2)}px`);
-        }
+        function updateCursor() { if (inputEl && wrapperEl) wrapperEl.style.setProperty('--cursor-pos', `${110 + (inputEl.value.length * 13.2)}px`); }
         if (inputEl) inputEl.addEventListener('input', updateCursor);
-
         function startTerminalBoot() {
-            document.getElementById('main-content').style.display = "none";
-            document.getElementById('boot-header').style.display = "none";
-            document.getElementById('static-logo').style.display = "none";
-            document.getElementById('intro-screen').style.display = "block";
-            document.getElementById('logo-area').style.display = "none";
-            document.getElementById('boot-3').innerHTML = "";
-
+            document.getElementById('main-content').style.display = "none"; document.getElementById('boot-header').style.display = "none"; document.getElementById('static-logo').style.display = "none"; document.getElementById('file-content-screen').style.display = "none"; document.getElementById('intro-screen').style.display = "block"; document.getElementById('logo-area').style.display = "none"; document.getElementById('boot-3').innerHTML = "";
             typeWriter("boot-1", "IBM BIOS CORE v0.87 - CORP 1987.", 20, () => {
                 typeWriter("boot-2", "SYSTEM RAM: 640KB OK (SECURE CHANNEL ACTIVATED)", 10, () => {
-                    document.getElementById('boot-3').innerHTML = "CONNECTING TO I.C.C. CODES CORE... ESTABLISHED.";
-                    document.getElementById('logo-area').style.display = "block";
-                    setTimeout(() => {
-                        document.getElementById('intro-screen').style.display = "none";
-                        document.getElementById('boot-header').style.display = "block";
-                        document.getElementById('static-logo').style.display = "block";
-                    }, 2000);
+                    document.getElementById('boot-3').innerHTML = "CONNECTING TO I.C.C. CODES CORE... ESTABLISHED."; document.getElementById('logo-area').style.display = "block";
+                    setTimeout(() => { document.getElementById('intro-screen').style.display = "none"; document.getElementById('boot-header').style.display = "block"; document.getElementById('static-logo').style.display = "block"; }, 2000);
                 });
             });
         }
-
         window.addEventListener('DOMContentLoaded', startTerminalBoot);
-
-        document.getElementById('btn-access').addEventListener('click', () => {
-            document.getElementById('boot-header').style.display = "none";
-            document.getElementById('main-content').style.display = "block";
-            document.getElementById('output-box').style.display = "none";
-            if (inputEl) { inputEl.focus(); updateCursor(); }
-        });
-
-        /* CORREÇÃO: Volta diretamente para o menu de índice sem reiniciar o site */
-        document.getElementById('btn-back').addEventListener('click', () => {
-            document.getElementById('main-content').style.display = "none";
-            document.getElementById('boot-header').style.display = "block";
-            if (inputEl) inputEl.value = "";
-        });
-
+        document.getElementById('btn-access').addEventListener('click', () => { document.getElementById('boot-header').style.display = "none"; document.getElementById('main-content').style.display = "block"; document.getElementById('output-box').style.display = "none"; if (inputEl) { inputEl.focus(); updateCursor(); } });
+        document.getElementById('btn-back').addEventListener('click', () => { document.getElementById('main-content').style.display = "none"; document.getElementById('boot-header').style.display = "block"; if (inputEl) inputEl.value = ""; });
+        document.getElementById('btn-close-file').addEventListener('click', () => { document.getElementById('file-content-screen').style.display = "none"; document.getElementById('main-content').style.display = "block"; if (inputEl) { inputEl.focus(); updateCursor(); } });
         if (inputEl) {
             inputEl.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
-                    const cmd = inputEl.value.trim().toLowerCase();
-                    const out = document.getElementById('output-box');
-                    out.style.display = "block";
-                    if (cmd === 'ajuda') out.innerHTML = "SISTEMA DE AJUDA IBM: Use comandos da tabela.";
-                    else if (cmd === 'limpar') { out.style.display = "none"; out.innerHTML = ""; }
-                    else if (cmd !== "") out.innerHTML = `ERRO: Comando '${cmd}' não reconhecido.`;
+                    const cmd = inputEl.value.trim().toLowerCase(); const out = document.getElementById('output-box'); const fileScreen = document.getElementById('file-content-screen'); const fileTextArea = document.getElementById('file-text-area'); out.style.display = "none";
+                    if (cmd === 'ajuda') { document.getElementById('main-content').style.display = "none"; fileScreen.style.display = "block"; fileTextArea.innerHTML = "<p><strong>[ SISTEMA DE AJUDA IBM ]</strong></p><p>Introduza códigos válidos na linha de comandos para ler o conteúdo dos ficheiros.</p>"; } 
+                    else if (cmd === 'limpar') { out.innerHTML = ""; } 
+                    else if (cmd === 'admin' || cmd === 'segredo') { document.getElementById('main-content').style.display = "none"; fileScreen.style.display = "block"; fileTextArea.innerHTML = "<p><strong>[ ACESSO CONFIDENCIAL DESBLOQUEADO ]</strong></p><p>A aguardar o log de texto do utilizador...</p>"; }
+                    else if (cmd !== "") { out.style.display = "block"; out.innerHTML = `ERRO: Comando '${cmd}' não reconhecido.`; }
                     inputEl.value = ""; updateCursor();
                 }
             });
