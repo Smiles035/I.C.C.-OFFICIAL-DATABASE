@@ -70,7 +70,7 @@
         if (inputEl) inputEl.addEventListener('input', updateCursor);
         function startTerminalBoot() {
             document.getElementById('main-content').style.display = "none"; document.getElementById('boot-header').style.display = "none"; document.getElementById('static-logo').style.display = "none"; document.getElementById('file-content-screen').style.display = "none"; document.getElementById('intro-screen').style.display = "block"; document.getElementById('logo-area').style.display = "none"; document.getElementById('boot-3').innerHTML = "";
-            typeWriter("boot-1", "IBM BIOS CORE v0.87 - CORP 1987.", 20, () => {
+            typeWriter("boot-1", "O.V.I.S. CORES v7.4.18 - I.C.C. 1955. > Initializing Core Processes... [OK] > Connecting to Habitat-07 Systems... [OK] > Power Grid Status........ONLINE > Atmospheric Systems......ONLINE > Security Network.........ONLINE > Medical Network..........ONLINE > Communications...........ONLINE > Scanning Personnel Registry... 2,814 Residents Located > Scanning Surface Sensors... Environmental Conditions: UNSAFE > Monitoring Active Threats... NO CONFIRMED THREATS > Directive 47-A Database... ACCESS RESTRICTED > Administrator Link... CONNECTED >class OVIS {bool habitatOnline = true; bool securityOnline = true; bool medicalOnline = true; void Startup { Print("O.V.I.S. INITIALIZING", 20, () => {
                 typeWriter("boot-2", "SYSTEM RAM: 640KB OK (SECURE CHANNEL ACTIVATED)", 10, () => {
                     document.getElementById('boot-3').innerHTML = "CONNECTING TO I.C.C. CODES CORE... ESTABLISHED."; document.getElementById('logo-area').style.display = "block";
                     setTimeout(() => { document.getElementById('intro-screen').style.display = "none"; document.getElementById('boot-header').style.display = "block"; document.getElementById('static-logo').style.display = "block"; }, 2000);
@@ -108,7 +108,7 @@
                     out.style.display = "none";
                     
                     /* CORREÇÃO: Apenas os comandos em inglês são aceites */
-                    if (cmd === 'help') { carregarFicheiro('help.txt'); } 
+                    if (cmd === 'help') { carregarFicheiro('Help.txt'); } 
                     else if (cmd === 'clear') { out.innerHTML = ""; } 
                     else if (cmd === 'icc-exec-001') { carregarFicheiro('icc-exec-001.txt'); }
                     else if (cmd === 'icc-swarm-001') { carregarFicheiro('icc-swarm-001.txt'); }
