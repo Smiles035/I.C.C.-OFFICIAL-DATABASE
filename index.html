@@ -101,7 +101,8 @@
 
             if (type === 'click') {
                 osc.type = 'triangle'; osc.frequency.setValueAtTime(600, now);
-                gain.gain.setValueAtTime(0.01, now); gain.gain.exponentialRampToValueAtTime(0.00001, now + 0.03);
+                // Increased gain volume value here from 0.01 to 0.08 for a louder click!
+                gain.gain.setValueAtTime(0.08, now); gain.gain.exponentialRampToValueAtTime(0.00001, now + 0.03);
                 osc.start(now); osc.stop(now + 0.03);
             } else if (type === 'enter') {
                 osc.type = 'square'; osc.frequency.setValueAtTime(450, now);
@@ -117,7 +118,6 @@
 
         // --- Generalized Typewriter Engine ---
         function runTypewriter(elementOrId, text, speed, cb) {
-            // Cancel any pending typewriter queues running elsewhere to prevent letter overlapping
             if (typewriterTimeout) clearTimeout(typewriterTimeout);
             
             let el = typeof elementOrId === "string" ? document.getElementById(elementOrId) : elementOrId;
@@ -220,7 +220,6 @@
                 if (percent >= 100) {
                     clearInterval(interval);
                     playTerminalSound('enter');
-                    // Type out the true raw text loaded from GitHub via our new engine!
                     runTypewriter(fileTextArea, fileContent, 5);
                 }
             }, 60);
@@ -287,6 +286,36 @@
                     if (currentMode === "COMMAND") {
                         if (cmd === 'help') { carregarFicheiro('help.txt'); } 
                         else if (cmd === 'clear') { playTerminalSound('enter'); out.innerHTML = ""; } 
+                        // --- GREETING COMMAND BLOCK ---
+                        else if (
+                            cmd === 'hi' || cmd === 'hey' || cmd === 'hello' || cmd.includes('say hello') ||
+                            cmd === 'yo' || cmd === 'sup' || cmd === 'greetings' || cmd === 'howdy' ||
+                            cmd === 'salutations' || cmd === 'oi' || cmd === 'ola' || cmd === 'hola' ||
+                            cmd === 'good morning' || cmd === 'good afternoon' || cmd === 'good evening' ||
+                            cmd.includes('whats up') || cmd.includes('what up') || cmd === 'hi there' ||
+                            cmd === 'hello there'
+                        ) {
+                            initAudio();
+                            if (audioCtx && audioCtx.state !== 'suspended') {
+                                const now = audioCtx.currentTime;
+                                let osc1 = audioCtx.createOscillator();
+                                let gain1 = audioCtx.createGain();
+                                osc1.type = 'sine'; osc1.frequency.setValueAtTime(880, now);
+                                gain1.gain.setValueAtTime(0.01, now); gain1.gain.exponentialRampToValueAtTime(0.00001, now + 0.05);
+                                osc1.connect(gain1); gain1.connect(audioCtx.destination);
+                                osc1.start(now); osc1.stop(now + 0.05);
+                                
+                                let osc2 = audioCtx.createOscillator();
+                                let gain2 = audioCtx.createGain();
+                                osc2.type = 'sine'; osc2.frequency.setValueAtTime(1109, now + 0.04);
+                                gain2.gain.setValueAtTime(0.01, now + 0.04); gain2.gain.exponentialRampToValueAtTime(0.00001, now + 0.10);
+                                osc2.connect(gain2); gain2.connect(audioCtx.destination);
+                                osc2.start(now + 0.04); osc2.stop(now + 0.10);
+                            }
+                            out.style.display = "block";
+                            runTypewriter(out, "\n[O.V.I.S. OVERLOAD PROTOCOL]\nSTATUS: ACTIVE\nGREETINGS, OPERATOR. REPOSITORY SUBSYSTEM IS LISTENING.", 6);
+                        }
+                        // --- END OF GREETINGS ---
                         else if (cmd === 'icc-exec-001' || cmd === 'icc-swarm-001') {
                             playTerminalSound('error');
                             pendingFile = cmd + ".txt"; 
