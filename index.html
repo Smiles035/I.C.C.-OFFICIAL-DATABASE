@@ -26,7 +26,7 @@
         #terminal-input { background: transparent; border: none; color: #ffb000; font-family: 'VT323', monospace; font-size: 24px; outline: none; width: 100%; text-shadow: 0 0 6px rgba(255, 176, 0, 0.6); caret-color: transparent; }
         .input-wrapper::after { content: ""; position: absolute; left: var(--cursor-pos, 0px); width: 12px; height: 24px; background: #ffb000; animation: blink 0.8s infinite; pointer-events: none; box-shadow: 0 0 6px rgba(255, 176, 0, 0.6); display: inline-block; }
         
-        #output-box { margin-top: 20px; padding: 15px; border: 1px solid #ffb000; background: rgba(255, 176, 0, 0.03); display: none; }
+        #output-box { margin-top: 20px; padding: 15px; border: 1px solid #ffb000; background: rgba(255, 176, 0, 0.03); display: none; white-space: pre-wrap; }
         #file-content-screen { display: none; border: 1px dashed #ffb000; padding: 25px; background: rgba(255, 176, 0, 0.02); margin-top: 20px; white-space: pre-wrap; line-height: 1.4; }
         #intro-screen p { white-space: pre-wrap; margin: 4px 0; font-size: 22px; line-height: 1.3; }
 
@@ -52,7 +52,6 @@
         </div>
         
         <div id="main-content" style="display: none;">
-            <!-- STATUS & TIME BAR -->
             <div style="display: flex; justify-content: space-between; font-size: 18px; margin-bottom: 15px; border-bottom: 1px solid rgba(255,176,0,0.3); padding-bottom: 5px;">
                 <span>SYS_STATUS: ONLINE</span>
                 <span id="live-clock">TIME: 00:00:00</span>
@@ -83,6 +82,7 @@
         let currentMode = "COMMAND"; 
         let pendingFile = "";
         let idleTimer = null;
+        let typewriterTimeout = null; // Track current running print sequences
 
         // --- Audio System Setup ---
         let audioCtx = null;
@@ -113,6 +113,31 @@
                 gain.gain.setValueAtTime(0.06, now); gain.gain.exponentialRampToValueAtTime(0.00001, now + 0.25);
                 osc.start(now); osc.stop(now + 0.25);
             }
+        }
+
+        // --- Generalized Typewriter Engine ---
+        function runTypewriter(elementOrId, text, speed, cb) {
+            // Cancel any pending typewriter queues running elsewhere to prevent letter overlapping
+            if (typewriterTimeout) clearTimeout(typewriterTimeout);
+            
+            let el = typeof elementOrId === "string" ? document.getElementById(elementOrId) : elementOrId;
+            if (!el) return;
+            
+            let i = 0;
+            el.textContent = "";
+            
+            function type() { 
+                if (i < text.length) { 
+                    el.textContent += text.charAt(i); 
+                    i++; 
+                    if (i % 3 === 0) playTerminalSound('click');
+                    typewriterTimeout = setTimeout(type, speed); 
+                } else {
+                    typewriterTimeout = null;
+                    if (cb) cb(); 
+                }
+            }
+            type();
         }
 
         // --- Real-Time Clock System ---
@@ -195,22 +220,10 @@
                 if (percent >= 100) {
                     clearInterval(interval);
                     playTerminalSound('enter');
-                    fileTextArea.textContent = fileContent;
+                    // Type out the true raw text loaded from GitHub via our new engine!
+                    runTypewriter(fileTextArea, fileContent, 5);
                 }
-            }, 100);
-        }
-
-        // --- Typewriter Logic ---
-        function typeWriter(id, text, speed, cb) {
-            let i = 0; const el = document.getElementById(id); if (!el) return; el.innerHTML = "";
-            function type() { 
-                if (i < text.length) { 
-                    el.innerHTML += text.charAt(i); i++; 
-                    if (i % 4 === 0) playTerminalSound('click');
-                    setTimeout(type, speed); 
-                } else if (cb) cb(); 
-            }
-            type();
+            }, 60);
         }
 
         const inputEl = document.getElementById('terminal-input');
@@ -236,8 +249,8 @@
             
             const bootText = "O.V.I.S. CORES v7.4.18 - I.C.C. 1955.\n> Initializing Core Processes... [OK]\n> Connecting to Habitat-07 Systems... [OK]\n> Power Grid Status........ONLINE\n> Atmospheric Systems......ONLINE\n> Security Network.........ONLINE\n> Medical Network..........ONLINE\n> Communications...........ONLINE\n> Scanning Personnel Registry... 2,814 Residents Located\n> Scanning Surface Sensors... Environmental Conditions: UNSAFE\n> Monitoring Active Threats... NO CONFIRMED THREATS\n> Directive 47-A Database... ACCESS RESTRICTED\n> Administrator Link... CONNECTED\nclass OVIS { bool habitatOnline = true; bool securityOnline = true; };";
 
-            typeWriter("boot-1", bootText, 6, () => {
-                typeWriter("boot-2", "SYSTEM RAM: 640KB OK (SECURE CHANNEL ACTIVATED)", 6, () => {
+            runTypewriter("boot-1", bootText, 6, () => {
+                runTypewriter("boot-2", "SYSTEM RAM: 640KB OK (SECURE CHANNEL ACTIVATED)", 6, () => {
                     document.getElementById('boot-3').innerHTML = "CONNECTING TO I.C.C. CODES CORE... ESTABLISHED."; document.getElementById('logo-area').style.display = "block";
                     setTimeout(() => { document.getElementById('intro-screen').style.display = "none"; document.getElementById('boot-header').style.display = "block"; document.getElementById('static-logo').style.display = "block"; }, 1500);
                 });
@@ -247,21 +260,19 @@
         
         document.getElementById('btn-access').addEventListener('click', () => { initAudio(); playTerminalSound('enter'); document.getElementById('boot-header').style.display = "none"; document.getElementById('main-content').style.display = "block"; document.getElementById('output-box').style.display = "none"; if (inputEl) { inputEl.focus(); updateCursor(); } });
         document.getElementById('btn-back').addEventListener('click', () => { playTerminalSound('click'); document.getElementById('main-content').style.display = "none"; document.getElementById('boot-header').style.display = "block"; if (inputEl) { inputEl.value = ""; currentMode = "COMMAND"; promptLabel.textContent = "COMMAND:> "; updateCursor(); } });
-        document.getElementById('btn-close-file').addEventListener('click', () => { playTerminalSound('click'); document.getElementById('file-content-screen').style.display = "none"; document.getElementById('main-content').style.display = "block"; if (inputEl) { inputEl.focus(); updateCursor(); } });
+        document.getElementById('btn-close-file').addEventListener('click', () => { playTerminalSound('click'); if(typewriterTimeout) clearTimeout(typewriterTimeout); document.getElementById('file-content-screen').style.display = "none"; document.getElementById('main-content').style.display = "block"; if (inputEl) { inputEl.focus(); updateCursor(); } });
         
-        // --- Dynamic GitHub File Fetcher ---
         function carregarFicheiro(nomeFicheiro) {
             fetch(nomeFicheiro)
                 .then(response => { if (!response.ok) throw new Error(); return response.text(); })
                 .then(texto => { 
-                    // Runs the decryption loading animation with your true file text data!
                     triggerDecryptionSequence(texto); 
                 })
                 .catch(() => { 
                     const out = document.getElementById('output-box'); 
                     playTerminalSound('error'); 
                     out.style.display = "block"; 
-                    out.innerHTML = `CRITICAL ERROR: Failed to read file '${nomeFicheiro}' from server.`; 
+                    runTypewriter(out, `CRITICAL ERROR: Failed to read file '${nomeFicheiro}' from server.`, 8);
                 });
         }
 
@@ -276,29 +287,32 @@
                     if (currentMode === "COMMAND") {
                         if (cmd === 'help') { carregarFicheiro('help.txt'); } 
                         else if (cmd === 'clear') { playTerminalSound('enter'); out.innerHTML = ""; } 
-                        // Intercept password-protected file requests
                         else if (cmd === 'icc-exec-001' || cmd === 'icc-swarm-001') {
                             playTerminalSound('error');
-                            pendingFile = cmd + ".txt"; // Save the exact file target
+                            pendingFile = cmd + ".txt"; 
                             currentMode = "PASSWORD";
                             promptLabel.textContent = "ENTER 4-DIGIT PIN:> ";
                             out.style.display = "block";
-                            out.innerHTML = "WARNING: ENCRYPTED PROFILE DETECTED. AUTHORIZATION CODE REQUIRED.";
+                            runTypewriter(out, "WARNING: ENCRYPTED PROFILE DETECTED. AUTHORIZATION CODE REQUIRED.", 8);
                         }
-                        else if (cmd !== "") { playTerminalSound('error'); out.style.display = "block"; out.innerHTML = `ERROR: Command '${cmd}' not recognized.`; }
+                        else if (cmd !== "") { 
+                            playTerminalSound('error'); 
+                            out.style.display = "block"; 
+                            runTypewriter(out, `ERROR: Command '${cmd}' not recognized.`, 8); 
+                        }
                     } 
                     else if (currentMode === "PASSWORD") {
                         if (cmd === "1955") {
                             playTerminalSound('enter');
                             currentMode = "COMMAND";
                             promptLabel.textContent = "COMMAND:> ";
-                            carregarFicheiro(pendingFile); // Fetches your raw text file from GitHub
+                            carregarFicheiro(pendingFile); 
                         } else {
                             playTerminalSound('error');
                             currentMode = "COMMAND";
                             promptLabel.textContent = "COMMAND:> ";
                             out.style.display = "block";
-                            out.innerHTML = "ACCESS DENIED: INVALID AUTHORIZATION TERMINAL KEY. RESETTING CONTEXT.";
+                            runTypewriter(out, "ACCESS DENIED: INVALID AUTHORIZATION TERMINAL KEY. RESETTING CONTEXT.", 8);
                         }
                     }
                     inputEl.value = ""; updateCursor();
