@@ -1,113 +1,168 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>I.C.C. Terminal</title>
-    <style>
-        @import url('https://googleapis.com');
-        @keyframes crt-flicker { 0% { opacity: 0.98; } 50% { opacity: 1; } 100% { opacity: 0.99; } }
-        @keyframes blink { 50% { border-color: transparent; } }
-        body { background-color: #030200; color: #ffb000; font-family: 'VT323', monospace; font-size: 24px; margin: 0; padding: 40px 20px; box-sizing: border-box; text-shadow: 0 0 6px rgba(255, 176, 0, 0.6); animation: crt-flicker 0.15s infinite; position: relative; }
-        body::before { content: " "; display: block; position: fixed; top: 0; left: 0; bottom: 0; right: 0; z-index: 10; pointer-events: none; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.45) 50%), radial-gradient(circle, rgba(0,0,0,0) 40%, rgba(0,0,0,0.85) 100%); background-size: 100% 5px, 100% 100%; }
-        .terminal { max-width: 900px; margin: 0 auto; position: relative; z-index: 2; padding-top: 40px; }
-        .corner-logo { position: fixed; top: 30px; right: 40px; max-width: 90px; height: auto; mix-blend-mode: screen; filter: brightness(1.2) contrast(1.5) sepia(1) saturate(12) hue-rotate(5deg); opacity: 0.85; display: none; z-index: 5; }
-        .logo-container { display: block; margin: 25px auto; text-align: center; }
-        .retro-logo { max-width: 260px; height: auto; mix-blend-mode: screen; filter: brightness(1.2) contrast(1.5) sepia(1) saturate(12) hue-rotate(5deg); opacity: 0.9; }
-        .retro-btn { background: transparent; border: 2px solid #ffb000; color: #ffb000; font-family: 'VT323', monospace; font-size: 26px; padding: 10px 20px; cursor: pointer; text-shadow: 0 0 6px rgba(255, 176, 0, 0.6); margin: 20px 0; display: inline-block; }
-        .retro-btn:hover { background-color: #ffb000; color: #000; }
-        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-        th, td { border: 1px solid #ffb000; padding: 10px; text-align: left; }
-        th { background-color: rgba(255, 176, 0, 0.2); }
-        .input-wrapper { display: flex; align-items: center; position: relative; width: 100%; }
-        #terminal-input { background: transparent; border: none; color: #ffb000; font-family: 'VT323', monospace; font-size: 24px; outline: none; width: 100%; text-shadow: 0 0 6px rgba(255, 176, 0, 0.6); caret-color: transparent; }
-        .input-wrapper::after { content: ""; position: absolute; left: var(--cursor-pos, 0px); width: 12px; height: 24px; background: #ffb000; animation: blink 0.8s infinite; pointer-events: none; box-shadow: 0 0 6px rgba(255, 176, 0, 0.6); display: inline-block; }
-        #output-box { margin-top: 20px; padding: 15px; border: 1px solid #ffb000; background: rgba(255, 176, 0, 0.03); display: none; }
-        #file-content-screen { display: none; border: 1px dashed #ffb000; padding: 25px; background: rgba(255, 176, 0, 0.02); margin-top: 20px; white-space: pre-wrap; line-height: 1.4; }
-        #intro-screen p { white-space: pre-wrap; margin: 4px 0; font-size: 22px; line-height: 1.3; }
-    </style>
-</head>
-<body>
-    <img id="static-logo" src="logo.png" alt="Logo" class="corner-logo">
-    <div class="terminal">
-        <div id="intro-screen">
-            <p id="boot-1"></p><p id="boot-2"></p><p id="boot-3"></p>
-            <div id="logo-area" class="logo-container" style="display: none;"><img src="logo.png" alt="Logo" class="retro-logo"></div>
-        </div>
-        <div id="boot-header" style="display: none;">
-            <p>I.C.C. DATABASE DISPLAY STATION — V1.0</p>
-            <p>O.V.I.S. OPERATING SYSTEM LOADED SUCCESSFULLY.</p>
-            <hr style="border: 1px dashed #ffb000;">
-            <button id="btn-access" class="retro-btn">[ ACCESS MAIN DIRECTORY ]</button>
-        </div>
-        <div id="main-content" style="display: none;">
-            <p>[ I.C.C. SECRET DIRECTORY ]</p>
-            <p>Warning: Confidential file IDs<br>are hidden from the index.</p>
-            <table>
-                <thead><tr><th>ID</th><th>FILE NAME</th><th>ACCESS STATUS</th></tr></thead>
-                <tbody>
-                    <tr><td>help</td><td>help.sys</td><td>PUBLIC</td></tr>
-                    <tr><td>clear</td><td>clear.sys</td><td>PUBLIC</td></tr>
-                </tbody>
-            </table>
-            <div id="output-box"></div><br>
-            <div class="input-wrapper"><span>COMMAND:> &nbsp;</span><input type="text" id="terminal-input" autocomplete="off"></div><br>
-            <button id="btn-back" class="retro-btn">[ RETURN TO MENU ]</button>
-        </div>
-        <div id="file-content-screen">
-            <div id="file-text-area"></div><br><hr style="border: 1px dashed #ffb000;"><br>
-            <button id="btn-close-file" class="retro-btn">[ RETURN TO DIRECTORY ]</button>
-        </div>
-    </div>
-        <script>
-        function typeWriter(id, text, speed, cb) {
-            let i = 0; const el = document.getElementById(id); if (!el) return; el.innerHTML = "";
-            function type() { if (i < text.length) { el.innerHTML += text.charAt(i); i++; setTimeout(type, speed); } else if (cb) cb(); }
-            type();
-        }
-        const inputEl = document.getElementById('terminal-input');
-        const wrapperEl = document.querySelector('.input-wrapper');
-        function updateCursor() { if (inputEl && wrapperEl) wrapperEl.style.setProperty('--cursor-pos', `${110 + (inputEl.value.length * 13.2)}px`); }
-        if (inputEl) inputEl.addEventListener('input', updateCursor);
-        
-        function startTerminalBoot() {
-            document.getElementById('main-content').style.display = "none"; document.getElementById('boot-header').style.display = "none"; document.getElementById('static-logo').style.display = "none"; document.getElementById('file-content-screen').style.display = "none"; document.getElementById('intro-screen').style.display = "block"; document.getElementById('logo-area').style.display = "none"; document.getElementById('boot-2').innerHTML = ""; document.getElementById('boot-3').innerHTML = "";
-            
-            const bootText = "O.V.I.S. CORES v7.4.18 - I.C.C. 1955.\n> Initializing Core Processes... [OK]\n> Connecting to Habitat-07 Systems... [OK]\n> Power Grid Status........ONLINE\n> Atmospheric Systems......ONLINE\n> Security Network.........ONLINE\n> Medical Network..........ONLINE\n> Communications...........ONLINE\n> Scanning Personnel Registry... 2,814 Residents Located\n> Scanning Surface Sensors... Environmental Conditions: UNSAFE\n> Monitoring Active Threats... NO CONFIRMED THREATS\n> Directive 47-A Database... ACCESS RESTRICTED\n> Administrator Link... CONNECTED\nclass OVIS { bool habitatOnline = true; bool securityOnline = true; };";
+<script>
+    // Web Audio API Synth for Retro Sound Effects
+    let audioCtx = null;
 
-            typeWriter("boot-1", bootText, 10, () => {
-                typeWriter("boot-2", "SYSTEM RAM: 640KB OK (SECURE CHANNEL ACTIVATED)", 10, () => {
-                    document.getElementById('boot-3').innerHTML = "CONNECTING TO I.C.C. CODES CORE... ESTABLISHED."; document.getElementById('logo-area').style.display = "block";
-                    setTimeout(() => { document.getElementById('intro-screen').style.display = "none"; document.getElementById('boot-header').style.display = "block"; document.getElementById('static-logo').style.display = "block"; }, 2000);
-                });
+    function initAudio() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+    }
+
+    function playTerminalSound(type) {
+        initAudio();
+        if (!audioCtx || audioCtx.state === 'suspended') return;
+
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+
+        const now = audioCtx.currentTime;
+
+        if (type === 'click') {
+            // Short, mechanical keyboard click
+            oscillator.type = 'triangle';
+            oscillator.frequency.setValueAtTime(600, now);
+            gainNode.gain.setValueAtTime(0.02, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.00001, now + 0.03);
+            oscillator.start(now);
+            oscillator.stop(now + 0.03);
+        } else if (type === 'enter') {
+            // Slightly deeper return key chime
+            oscillator.type = 'square';
+            oscillator.frequency.setValueAtTime(400, now);
+            gainNode.gain.setValueAtTime(0.03, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.00001, now + 0.08);
+            oscillator.start(now);
+            oscillator.stop(now + 0.08);
+        } else if (type === 'error') {
+            // A low, gritty retro error buzz
+            oscillator.type = 'sawtooth';
+            oscillator.frequency.setValueAtTime(120, now);
+            oscillator.frequency.linearRampToValueAtTime(90, now + 0.25);
+            gainNode.gain.setValueAtTime(0.08, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.00001, now + 0.25);
+            oscillator.start(now);
+            oscillator.stop(now + 0.25);
+        }
+    }
+
+    // --- Original Terminal Logic with Sound Hooks ---
+
+    function typeWriter(id, text, speed, cb) {
+        let i = 0; const el = document.getElementById(id); if (!el) return; el.innerHTML = "";
+        function type() { 
+            if (i < text.length) { 
+                el.innerHTML += text.charAt(i); 
+                i++; 
+                // Optional: Play a tiny click for typewriter effect, filtered down
+                if (i % 3 === 0) playTerminalSound('click'); 
+                setTimeout(type, speed); 
+            } else if (cb) cb(); 
+        }
+        type();
+    }
+
+    const inputEl = document.getElementById('terminal-input');
+    const wrapperEl = document.querySelector('.input-wrapper');
+    
+    function updateCursor() { 
+        if (inputEl && wrapperEl) wrapperEl.style.setProperty('--cursor-pos', `${110 + (inputEl.value.length * 13.2)}px`); 
+    }
+    
+    if (inputEl) {
+        inputEl.addEventListener('input', () => {
+            updateCursor();
+            playTerminalSound('click'); // Click on every keystroke
+        });
+    }
+    
+    function startTerminalBoot() {
+        document.getElementById('main-content').style.display = "none"; 
+        document.getElementById('boot-header').style.display = "none"; 
+        document.getElementById('static-logo').style.display = "none"; 
+        document.getElementById('file-content-screen').style.display = "none"; 
+        document.getElementById('intro-screen').style.display = "block"; 
+        document.getElementById('logo-area').style.display = "none"; 
+        document.getElementById('boot-2').innerHTML = ""; 
+        document.getElementById('boot-3').innerHTML = "";
+        
+        const bootText = "O.V.I.S. CORES v7.4.18 - I.C.C. 1955.\n> Initializing Core Processes... [OK]\n> Connecting to Habitat-07 Systems... [OK]\n> Power Grid Status........ONLINE\n> Atmospheric Systems......ONLINE\n> Security Network.........ONLINE\n> Medical Network..........ONLINE\n> Communications...........ONLINE\n> Scanning Personnel Registry... 2,814 Residents Located\n> Scanning Surface Sensors... Environmental Conditions: UNSAFE\n> Monitoring Active Threats... NO CONFIRMED THREATS\n> Directive 47-A Database... ACCESS RESTRICTED\n> Administrator Link... CONNECTED\nclass OVIS { bool habitatOnline = true; bool securityOnline = true; };";
+
+        typeWriter("boot-1", bootText, 10, () => {
+            typeWriter("boot-2", "SYSTEM RAM: 640KB OK (SECURE CHANNEL ACTIVATED)", 10, () => {
+                document.getElementById('boot-3').innerHTML = "CONNECTING TO I.C.C. CODES CORE... ESTABLISHED."; 
+                document.getElementById('logo-area').style.display = "block";
+                setTimeout(() => { 
+                    document.getElementById('intro-screen').style.display = "none"; 
+                    document.getElementById('boot-header').style.display = "block"; 
+                    document.getElementById('static-logo').style.display = "block"; 
+                }, 2000);
             });
-        }
-        window.addEventListener('DOMContentLoaded', startTerminalBoot);
-        
-        document.getElementById('btn-access').addEventListener('click', () => { document.getElementById('boot-header').style.display = "none"; document.getElementById('main-content').style.display = "block"; document.getElementById('output-box').style.display = "none"; if (inputEl) { inputEl.focus(); updateCursor(); } });
-        document.getElementById('btn-back').addEventListener('click', () => { document.getElementById('main-content').style.display = "none"; document.getElementById('boot-header').style.display = "block"; if (inputEl) inputEl.value = ""; });
-        document.getElementById('btn-close-file').addEventListener('click', () => { document.getElementById('file-content-screen').style.display = "none"; document.getElementById('main-content').style.display = "block"; if (inputEl) { inputEl.focus(); updateCursor(); } });
-        
-        function carregarFicheiro(nomeFicheiro) {
-            fetch(nomeFicheiro)
-                .then(response => { if (!response.ok) throw new Error(); return response.text(); })
-                .then(texto => { document.getElementById('main-content').style.display = "none"; document.getElementById('file-content-screen').style.display = "block"; document.getElementById('file-text-area').textContent = texto; })
-                .catch(() => { const out = document.getElementById('output-box'); out.style.display = "block"; out.innerHTML = `CRITICAL ERROR: Failed to read file '${nomeFicheiro}' from server.`; });
-        }
+        });
+    }
+    
+    window.addEventListener('DOMContentLoaded', startTerminalBoot);
+    
+    // Unlock audio context on first interactive button click
+    document.getElementById('btn-access').addEventListener('click', () => { 
+        initAudio();
+        playTerminalSound('enter');
+        document.getElementById('boot-header').style.display = "none"; 
+        document.getElementById('main-content').style.display = "block"; 
+        document.getElementById('output-box').style.display = "none"; 
+        if (inputEl) { inputEl.focus(); updateCursor(); } 
+    });
+    
+    document.getElementById('btn-back').addEventListener('click', () => { 
+        playTerminalSound('click');
+        document.getElementById('main-content').style.display = "none"; 
+        document.getElementById('boot-header').style.display = "block"; 
+        if (inputEl) inputEl.value = ""; 
+    });
+    
+    document.getElementById('btn-close-file').addEventListener('click', () => { 
+        playTerminalSound('click');
+        document.getElementById('file-content-screen').style.display = "none"; 
+        document.getElementById('main-content').style.display = "block"; 
+        if (inputEl) { inputEl.focus(); updateCursor(); } 
+    });
+    
+    function carregarFicheiro(nomeFicheiro) {
+        fetch(nomeFicheiro)
+            .then(response => { if (!response.ok) throw new Error(); return response.text(); })
+            .then(texto => { 
+                playTerminalSound('enter');
+                document.getElementById('main-content').style.display = "none"; 
+                document.getElementById('file-content-screen').style.display = "block"; 
+                document.getElementById('file-text-area').textContent = texto; 
+            })
+            .catch(() => { 
+                playTerminalSound('error'); // Play failure sound
+                const out = document.getElementById('output-box'); 
+                out.style.display = "block"; 
+                out.innerHTML = `CRITICAL ERROR: Failed to read file '${nomeFicheiro}' from server.`; 
+            });
+    }
 
-        if (inputEl) {
-            inputEl.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    const cmd = inputEl.value.trim().toLowerCase(); const out = document.getElementById('output-box'); out.style.display = "none";
-                    if (cmd === 'help') { carregarFicheiro('help.txt'); } 
-                    else if (cmd === 'clear') { out.innerHTML = ""; } 
-                    else if (cmd === 'icc-exec-001') { carregarFicheiro('icc-exec-001.txt'); }
-                    else if (cmd === 'icc-swarm-001') { carregarFicheiro('icc-swarm-001.txt'); }
-                    else if (cmd !== "") { out.style.display = "block"; out.innerHTML = `ERROR: Command '${cmd}' not recognized.`; }
-                    inputEl.value = ""; updateCursor();
+    if (inputEl) {
+        inputEl.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const cmd = inputEl.value.trim().toLowerCase(); 
+                const out = document.getElementById('output-box'); 
+                out.style.display = "none";
+                
+                if (cmd === 'help') { carregarFicheiro('help.txt'); } 
+                else if (cmd === 'clear') { playTerminalSound('enter'); out.innerHTML = ""; } 
+                else if (cmd === 'icc-exec-001') { carregarFicheiro('icc-exec-001.txt'); }
+                else if (cmd === 'icc-swarm-001') { carregarFicheiro('icc-swarm-001.txt'); }
+                else if (cmd !== "") { 
+                    playTerminalSound('error'); // Wrong command sound
+                    out.style.display = "block"; 
+                    out.innerHTML = `ERROR: Command '${cmd}' not recognized.`; 
                 }
-            });
-        }
-    </script>
-</body>
-</html>
+                inputEl.value = ""; updateCursor();
+            }
+        });
+    }
+</script>
