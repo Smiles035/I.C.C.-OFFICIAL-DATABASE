@@ -17,9 +17,12 @@
         .logo-container { display: block; margin: 25px auto; text-align: center; }
         .retro-logo { max-width: 260px; height: auto; mix-blend-mode: screen; filter: brightness(1.2) contrast(1.5) sepia(1) saturate(12) hue-rotate(5deg); opacity: 0.9; }
         
-        /* Centralized Power-on Box styling */
         .power-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; text-align: center; }
         
+        .login-box { display: inline-flex; align-items: center; justify-content: center; border: 2px solid #ffb000; padding: 10px 20px; margin-top: 30px; position: relative; box-shadow: 0 0 10px rgba(255, 176, 0, 0.2); }
+        .login-box input { background: transparent; border: none; color: #ffb000; font-family: 'VT323', monospace; font-size: 26px; outline: none; width: 140px; text-shadow: 0 0 6px rgba(255, 176, 0, 0.6); text-transform: uppercase; caret-color: transparent; }
+        .login-box::after { content: ""; position: absolute; left: var(--login-cursor-pos, 135px); width: 12px; height: 24px; background: #ffb000; animation: blink 0.8s infinite; pointer-events: none; box-shadow: 0 0 6px rgba(255, 176, 0, 0.6); }
+
         .retro-btn { background: transparent; border: 2px solid #ffb000; color: #ffb000; font-family: 'VT323', monospace; font-size: 26px; padding: 10px 20px; cursor: pointer; text-shadow: 0 0 6px rgba(255, 176, 0, 0.6); margin: 20px 0; display: inline-block; }
         .retro-btn:hover { background-color: #ffb000; color: #000; }
         table { width: 100%; border-collapse: collapse; margin: 20px 0; }
@@ -34,7 +37,6 @@
         #file-content-screen { display: none; border: 1px dashed #ffb000; padding: 25px; background: rgba(255, 176, 0, 0.02); margin-top: 20px; white-space: pre-wrap; line-height: 1.4; }
         #intro-screen p { white-space: pre-wrap; margin: 4px 0; font-size: 22px; line-height: 1.3; }
 
-        /* Screensaver Layer */
         #screensaver { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #030200; z-index: 100; }
     </style>
 </head>
@@ -43,11 +45,15 @@
     <img id="static-logo" src="logo.png" alt="Logo" class="corner-logo">
     
     <div class="terminal">
-        <!-- New Primary System Interactivity Interaction Frame -->
         <div id="power-on-screen" class="power-screen">
             <p>I.C.C. MAINFRAME STATION 07</p>
             <p>SYSTEM ACCESS REQUIRES USER PERMISSION INITIALIZATION</p>
-            <button id="btn-power" class="retro-btn">[ INITIALIZE CORE SYSTEM POWER ]</button>
+            <div id="login-error-msg" style="color: #ff3333; text-shadow: 0 0 6px rgba(255, 51, 51, 0.6); height: 30px; margin-top: 15px;"></div>
+            <div class="login-box" id="login-box-container">
+                <span>IDENTITY PIN:&nbsp;</span>
+                <input type="text" id="login-input" autocomplete="off" max-length="12">
+            </div>
+            <p style="font-size: 18px; margin-top: 15px; opacity: 0.7;">[ Type GUEST and Press Enter to Authenticate ]</p>
         </div>
 
         <div id="intro-screen" style="display: none;">
@@ -89,7 +95,6 @@
     </div>
 
     <script>
-        // --- System State Management ---
         let currentMode = "COMMAND"; 
         let pendingFile = "";
         let idleTimer = null;
@@ -125,35 +130,79 @@
             }
         }
 
-        // Sci-Fi Mainframe TTS Engine (GLaDOS / Mother Calibration V2)
+        // --- Software Automatic Mouth (SAM) Hardware Synthesis Simulator ---
         function speakLikeSAM(phrase) {
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-                
-                // Formulate phonetic staccato pacing with longer, calculated gaps
-                // This breaks up the natural human flow that makes it sound too young
-                const processedPhrase = phrase.toUpperCase().replace(/, /g, "... ... ").replace(/ /g, "... ");
-                const utterance = new SpeechSynthesisUtterance(processedPhrase);
-                const voices = window.speechSynthesis.getVoices();
-                
-                // Prioritize mature, clear female system engines
-                const mainframeVoice = voices.find(v => 
-                    v.name.toLowerCase().includes('zira') || 
-                    v.name.toLowerCase().includes('google uk english female') ||
-                    v.name.toLowerCase().includes('hazel') ||
-                    v.name.toLowerCase().includes('female') ||
-                    v.name.toLowerCase().includes('google us english')
-                );
-                
-                if (mainframeVoice) utterance.voice = mainframeVoice;
+            if (!audioCtx) return;
+            const now = audioCtx.currentTime;
+            
+            // Phonetic timing mapped to simple word structures
+            const words = phrase.toUpperCase().split(" ");
+            let baseTime = now + 0.1;
 
-                // Mainframe re-calibration profiles (Deeper, slower, calculation-heavy)
-                utterance.pitch = 0.95; // Dropped below 1.0 to add a cold, mature, mechanical weight
-                utterance.rate = 0.52;  // Significantly slowed down to force a calculating cadence
-                utterance.volume = 1.0; 
+            // Simplified 8-bit allophone frequency dictionary mapping basic characters to robotic formants
+            const formants = {
+                'G': { f1: 300, f2: 1800, type: 'square' },
+                'R': { f1: 350, f2: 1300, type: 'square' },
+                'E': { f1: 400, f2: 2000, type: 'sawtooth' },
+                'T': { f1: 150, f2: 2500, type: 'triangle' },
+                'I': { f1: 250, f2: 2200, type: 'sawtooth' },
+                'N': { f1: 250, f2: 1000, type: 'square' },
+                'S': { f1: 100, f2: 3500, type: 'triangle' },
+                'H': { f1: 200, f2: 3000, type: 'triangle' },
+                'L': { f1: 300, f2: 1500, type: 'square' },
+                'O': { f1: 500, f2: 900,  type: 'square' },
+                'P': { f1: 200, f2: 1200, type: 'square' },
+                'A': { f1: 700, f2: 1200, type: 'sawtooth' }
+            };
+
+            words.forEach((word) => {
+                // Approximate SAM's vintage 8-bit duration (roughly 75ms per character slice)
+                const charDuration = 0.075;
                 
-                window.speechSynthesis.speak(utterance);
-            }
+                for (let i = 0; i < word.length; i++) {
+                    const char = word[i];
+                    const cfg = formants[char] || { f1: 400, f2: 1500, type: 'square' };
+                    
+                    // Generate primary low vocal chord pulse
+                    const osc1 = audioCtx.createOscillator();
+                    // Generate higher frequency mouth cavity resonance 
+                    const osc2 = audioCtx.createOscillator();
+                    
+                    const gainNode = audioCtx.createGain();
+                    const filter = audioCtx.createBiquadFilter();
+
+                    osc1.type = cfg.type;
+                    // SAM's vintage pitch engine locked to a cold, robotic monotone (around 90Hz)
+                    osc1.frequency.setValueAtTime(92, baseTime);
+                    
+                    osc2.type = 'square';
+                    osc2.frequency.setValueAtTime(cfg.f2, baseTime);
+
+                    // Recreate vintage bitcrushed/subtractive synthesis filtering
+                    filter.type = 'bandpass';
+                    filter.frequency.setValueAtTime(cfg.f1, baseTime);
+                    filter.Q.setValueAtTime(4, baseTime);
+
+                    gainNode.gain.setValueAtTime(0, baseTime);
+                    gainNode.gain.linearRampToValueAtTime(0.08, baseTime + 0.01);
+                    gainNode.gain.setValueAtTime(0.08, baseTime + charDuration - 0.01);
+                    gainNode.gain.linearRampToValueAtTime(0, baseTime + charDuration);
+
+                    osc1.connect(filter);
+                    osc2.connect(filter);
+                    filter.connect(gainNode);
+                    gainNode.connect(audioCtx.destination);
+
+                    osc1.start(baseTime);
+                    osc2.start(baseTime);
+                    osc1.stop(baseTime + charDuration);
+                    osc2.stop(baseTime + charDuration);
+
+                    baseTime += charDuration;
+                }
+                // Enforce a severe mechanical delay between distinct word sets
+                baseTime += 0.18; 
+            });
         }
 
         // --- Generalized Typewriter Engine ---
@@ -235,7 +284,6 @@
         window.addEventListener('mousemove', resetIdleTimer);
         window.addEventListener('keydown', resetIdleTimer);
 
-        // --- Simulated Decryption Progress Engine ---
         function triggerDecryptionSequence(fileContent) {
             const mainContent = document.getElementById('main-content');
             const fileScreen = document.getElementById('file-content-screen');
@@ -279,11 +327,58 @@
         if (inputEl) {
             inputEl.addEventListener('input', () => { updateCursor(); playTerminalSound('click'); });
         }
+
+        // --- Login Page Input Engine ---
+        const loginInput = document.getElementById('login-input');
+        const loginBoxContainer = document.getElementById('login-box-container');
+        const loginErrorMsg = document.getElementById('login-error-msg');
+
+        function updateLoginCursor() {
+            if (loginInput && loginBoxContainer) {
+                let textLength = loginInput.value.length;
+                let offset = 135 + (textLength * 14.3);
+                loginBoxContainer.style.setProperty('--login-cursor-pos', `${offset}px`);
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            if(loginInput) loginInput.focus();
+        });
+        document.addEventListener('click', () => {
+            if(document.getElementById('power-on-screen').style.display !== "none" && loginInput) {
+                loginInput.focus();
+            }
+        });
+
+        if (loginInput) {
+            loginInput.addEventListener('input', () => {
+                updateLoginCursor();
+                playTerminalSound('click');
+            });
+
+            loginInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    initAudio(); 
+                    const val = loginInput.value.trim().toLowerCase();
+                    
+                    if (val === 'guest') {
+                        loginErrorMsg.textContent = "";
+                        document.getElementById('power-on-screen').style.display = "none";
+                        playTerminalSound('enter');
+                        startTerminalBoot();
+                    } else {
+                        playTerminalSound('error');
+                        loginErrorMsg.textContent = "CRITICAL ERROR: ACCESS DENIED. IDENTITY UNRECOGNIZED.";
+                        loginInput.value = "";
+                        updateLoginCursor();
+                    }
+                }
+            });
+        }
         
         function startTerminalBoot() {
             runClock();
             resetIdleTimer();
-            if ('speechSynthesis' in window) window.speechSynthesis.getVoices();
             
             document.getElementById('intro-screen').style.display = "block";
             
@@ -296,14 +391,6 @@
                 });
             });
         }
-
-        // Master Power Interactive Button Switch Engine
-        document.getElementById('btn-power').addEventListener('click', () => {
-            initAudio(); // Force audio pipeline handshake 
-            document.getElementById('power-on-screen').style.display = "none";
-            playTerminalSound('enter');
-            startTerminalBoot(); // Run typing script sequence with valid sound context
-        });
         
         document.getElementById('btn-access').addEventListener('click', () => { playTerminalSound('enter'); document.getElementById('boot-header').style.display = "none"; document.getElementById('main-content').style.display = "block"; document.getElementById('output-box').style.display = "none"; if (inputEl) { inputEl.focus(); updateCursor(); } });
         document.getElementById('btn-back').addEventListener('click', () => { playTerminalSound('click'); document.getElementById('main-content').style.display = "none"; document.getElementById('boot-header').style.display = "block"; if (inputEl) { inputEl.value = ""; currentMode = "COMMAND"; promptLabel.textContent = "COMMAND:> "; updateCursor(); } });
@@ -342,24 +429,8 @@
                             cmd.includes('whats up') || cmd.includes('what up') || cmd === 'hi there' ||
                             cmd === 'hello there'
                         ) {
-                            if (audioCtx && audioCtx.state !== 'suspended') {
-                                const now = audioCtx.currentTime;
-                                let osc1 = audioCtx.createOscillator();
-                                let gain1 = audioCtx.createGain();
-                                osc1.type = 'sine'; osc1.frequency.setValueAtTime(880, now);
-                                gain1.gain.setValueAtTime(0.01, now); gain1.gain.exponentialRampToValueAtTime(0.00001, now + 0.05);
-                                osc1.connect(gain1); gain1.connect(audioCtx.destination);
-                                osc1.start(now); osc1.stop(now + 0.05);
-                                
-                                let osc2 = audioCtx.createOscillator();
-                                let gain2 = audioCtx.createGain();
-                                osc2.type = 'sine'; osc2.frequency.setValueAtTime(1109, now + 0.04);
-                                gain2.gain.setValueAtTime(0.01, now + 0.04); gain2.gain.exponentialRampToValueAtTime(0.00001, now + 0.10);
-                                osc2.connect(gain2); gain2.connect(audioCtx.destination);
-                                osc2.start(now + 0.04); osc2.stop(now + 0.10);
-                            }
-                            
-                            speakLikeSAM("Greetings, hello operator.");
+                            // Synthesize SAM Voice Output
+                            speakLikeSAM("greetings hello operator");
                             
                             out.style.display = "block";
                             runTypewriter(out, "\n[HELLO WORLD]\nTERMINAL STATUS: ACTIVE\nGREETINGS, HELLO OPERATOR.", 6);
