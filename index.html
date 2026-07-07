@@ -17,6 +17,7 @@
         .logo-container { display: block; margin: 25px auto; text-align: center; }
         .retro-logo { max-width: 260px; height: auto; mix-blend-mode: screen; filter: brightness(1.2) contrast(1.5) sepia(1) saturate(12) hue-rotate(5deg); opacity: 0.9; }
         
+        /* Centralized Power-on Box styling */
         .power-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; text-align: center; }
         
         .retro-btn { background: transparent; border: 2px solid #ffb000; color: #ffb000; font-family: 'VT323', monospace; font-size: 26px; padding: 10px 20px; cursor: pointer; text-shadow: 0 0 6px rgba(255, 176, 0, 0.6); margin: 20px 0; display: inline-block; }
@@ -294,11 +295,12 @@
             });
         }
 
+        // Master Power Interactive Button Switch Engine
         document.getElementById('btn-power').addEventListener('click', () => {
-            initAudio(); 
+            initAudio(); // Force audio pipeline handshake 
             document.getElementById('power-on-screen').style.display = "none";
             playTerminalSound('enter');
-            startTerminalBoot(); 
+            startTerminalBoot(); // Run typing script sequence with valid sound context
         });
         
         document.getElementById('btn-access').addEventListener('click', () => { playTerminalSound('enter'); document.getElementById('boot-header').style.display = "none"; document.getElementById('main-content').style.display = "block"; document.getElementById('output-box').style.display = "none"; if (inputEl) { inputEl.focus(); updateCursor(); } });
