@@ -6,23 +6,27 @@
     <title>I.C.C. Terminal</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
-        
         @keyframes crt-flicker { 0% { opacity: 0.98; } 50% { opacity: 1; } 100% { opacity: 0.99; } }
         @keyframes blink { 50% { border-color: transparent; } }
         
-        body { background-color: #030200 !important; color: #ffb000; font-family: 'VT323', monospace; font-size: 24px; margin: 0; padding: 40px 20px; box-sizing: border-box; text-shadow: 0 0 6px rgba(255, 176, 0, 0.6); animation: crt-flicker 0.15s infinite; position: relative; }
+        body { background-color: #030200; color: #ffb000; font-family: 'VT323', monospace; font-size: 24px; margin: 0; padding: 40px 20px; box-sizing: border-box; text-shadow: 0 0 6px rgba(255, 176, 0, 0.6); animation: crt-flicker 0.15s infinite; position: relative; }
         body::before { content: " "; display: block; position: fixed; top: 0; left: 0; bottom: 0; right: 0; z-index: 10; pointer-events: none; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.45) 50%), radial-gradient(circle, rgba(0,0,0,0) 40%, rgba(0,0,0,0.85) 100%); background-size: 100% 5px, 100% 100%; }
         
         .terminal { max-width: 900px; margin: 0 auto; position: relative; z-index: 2; padding-top: 40px; }
+        .corner-logo { position: fixed; top: 30px; right: 40px; max-width: 90px; height: auto; mix-blend-mode: screen; filter: brightness(1.2) contrast(1.5) sepia(1) saturate(12) hue-rotate(5deg); opacity: 0.85; display: none; z-index: 5; }
+        .logo-container { display: block; margin: 25px auto; text-align: center; }
+        .retro-logo { max-width: 260px; height: auto; mix-blend-mode: screen; filter: brightness(1.2) contrast(1.5) sepia(1) saturate(12) hue-rotate(5deg); opacity: 0.9; }
+        
+        /* Centralized Power-on Box styling */
         .power-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; text-align: center; }
         
+        /* Login Wrapper & Styling */
         .login-box { display: inline-flex; align-items: center; justify-content: center; border: 2px solid #ffb000; padding: 10px 20px; margin-top: 30px; position: relative; box-shadow: 0 0 10px rgba(255, 176, 0, 0.2); }
         .login-box input { background: transparent; border: none; color: #ffb000; font-family: 'VT323', monospace; font-size: 26px; outline: none; width: 140px; text-shadow: 0 0 6px rgba(255, 176, 0, 0.6); text-transform: uppercase; caret-color: transparent; }
         .login-box::after { content: ""; position: absolute; left: var(--login-cursor-pos, 135px); width: 12px; height: 24px; background: #ffb000; animation: blink 0.8s infinite; pointer-events: none; box-shadow: 0 0 6px rgba(255, 176, 0, 0.6); }
 
         .retro-btn { background: transparent; border: 2px solid #ffb000; color: #ffb000; font-family: 'VT323', monospace; font-size: 26px; padding: 10px 20px; cursor: pointer; text-shadow: 0 0 6px rgba(255, 176, 0, 0.6); margin: 20px 0; display: inline-block; }
         .retro-btn:hover { background-color: #ffb000; color: #000; }
-        
         table { width: 100%; border-collapse: collapse; margin: 20px 0; }
         th, td { border: 1px solid #ffb000; padding: 10px; text-align: left; }
         th { background-color: rgba(255, 176, 0, 0.2); }
@@ -34,82 +38,412 @@
         #output-box { margin-top: 20px; padding: 15px; border: 1px solid #ffb000; background: rgba(255, 176, 0, 0.03); display: none; white-space: pre-wrap; }
         #file-content-screen { display: none; border: 1px dashed #ffb000; padding: 25px; background: rgba(255, 176, 0, 0.02); margin-top: 20px; white-space: pre-wrap; line-height: 1.4; }
         #intro-screen p { white-space: pre-wrap; margin: 4px 0; font-size: 22px; line-height: 1.3; }
+
+        /* Screensaver Layer */
         #screensaver { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #030200; z-index: 100; }
     </style>
 </head>
 <body>
     <canvas id="screensaver"></canvas>
+    <img id="static-logo" src="logo.png" alt="Logo" class="corner-logo">
+    
     <div class="terminal">
         <div id="power-on-screen" class="power-screen">
             <p>I.C.C. MAINFRAME STATION 07</p>
-            <div id="login-error-msg" style="color: #ff3333; height: 30px; margin-top: 15px;"></div>
+            <p>SYSTEM ACCESS REQUIRES USER PERMISSION INITIALIZATION</p>
+            <div id="login-error-msg" style="color: #ff3333; text-shadow: 0 0 6px rgba(255, 51, 51, 0.6); height: 30px; margin-top: 15px;"></div>
             <div class="login-box" id="login-box-container">
                 <span>IDENTITY PIN:&nbsp;</span>
-                <input type="text" id="login-input" autocomplete="off" maxlength="12">
+                <input type="text" id="login-input" autocomplete="off" max-length="12" placeholder="">
             </div>
-            <p style="font-size: 18px; margin-top: 15px; opacity: 0.7;">[ Type GUEST and Press Enter ]</p>
+            <p style="font-size: 18px; margin-top: 15px; opacity: 0.7;">[ Press Enter to Authenticate ]</p>
         </div>
 
-        <div id="intro-screen" style="display: none;"><p id="boot-1"></p><p id="boot-2"></p><p id="boot-3"></p></div>
+        <div id="intro-screen" style="display: none;">
+            <p id="boot-1"></p><p id="boot-2"></p><p id="boot-3"></p>
+            <div id="logo-area" class="logo-container" style="display: none;"><img src="logo.png" alt="Logo" class="retro-logo"></div>
+        </div>
+        
         <div id="boot-header" style="display: none;">
-            <p>I.C.C. DATABASE SYSTEM V1.0</p>
+            <p>I.C.C. DATABASE DISPLAY STATION — V1.0</p>
+            <p>O.V.I.S. OPERATING SYSTEM LOADED SUCCESSFULLY.</p>
             <hr style="border: 1px dashed #ffb000;">
             <button id="btn-access" class="retro-btn">[ ACCESS MAIN DIRECTORY ]</button>
         </div>
         
         <div id="main-content" style="display: none;">
+            <div style="display: flex; justify-content: space-between; font-size: 18px; margin-bottom: 15px; border-bottom: 1px solid rgba(255,176,0,0.3); padding-bottom: 5px;">
+                <span>SYS_STATUS: ONLINE</span>
+                <span id="live-clock">TIME: 00:00:00</span>
+            </div>
+
             <p>[ I.C.C. SECRET DIRECTORY ]</p>
-            <table><thead><tr><th>ID</th><th>FILE NAME</th></tr></thead><tbody><tr><td>help</td><td>help.sys</td></tr></tbody></table>
+            <p>Warning: Confidential file IDs<br>are hidden from the index.</p>
+            <table>
+                <thead><tr><th>ID</th><th>FILE NAME</th><th>ACCESS STATUS</th></tr></thead>
+                <tbody>
+                    <tr><td>help</td><td>help.sys</td><td>PUBLIC</td></tr>
+                    <tr><td>clear</td><td>clear.sys</td><td>PUBLIC</td></tr>
+                </tbody>
+            </table>
             <div id="output-box"></div><br>
-            <div class="input-wrapper"><span id="prompt-label">COMMAND:> &nbsp;</span><input type="text" id="terminal-input" autocomplete="off"></div>
+            <div class="input-wrapper"><span id="prompt-label">COMMAND:> &nbsp;</span><input type="text" id="terminal-input" autocomplete="off"></div><br>
+            <button id="btn-back" class="retro-btn">[ RETURN TO MENU ]</button>
         </div>
         
         <div id="file-content-screen">
-            <div id="file-text-area"></div><br>
-            <button id="btn-close-file" class="retro-btn">[ RETURN ]</button>
+            <div id="file-text-area"></div><br><hr style="border: 1px dashed #ffb000;"><br>
+            <button id="btn-close-file" class="retro-btn">[ RETURN TO DIRECTORY ]</button>
         </div>
     </div>
 
     <script>
-        // Audio Engine
-        function playVoiceClip(fileName) {
-            const audio = new Audio(fileName);
-            audio.play().catch(e => console.log("Audio waiting for interaction..."));
+        // --- System State Management ---
+        let currentMode = "COMMAND"; 
+        let pendingFile = "";
+        let idleTimer = null;
+        let typewriterTimeout = null; 
+
+        // --- Audio System Setup ---
+        let audioCtx = null;
+        function initAudio() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
         }
 
-        function playSound(type) {
-            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playTerminalSound(type) {
+            if (!audioCtx || audioCtx.state === 'suspended') return;
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.type = 'triangle'; osc.frequency.setValueAtTime(600, audioCtx.currentTime);
-            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.03);
-            osc.start(); osc.stop(audioCtx.currentTime + 0.03);
+            const now = audioCtx.currentTime;
+
+            if (type === 'click') {
+                osc.type = 'triangle'; osc.frequency.setValueAtTime(600, now);
+                gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.00001, now + 0.03);
+                osc.start(now); osc.stop(now + 0.03);
+            } else if (type === 'enter') {
+                osc.type = 'square'; osc.frequency.setValueAtTime(450, now);
+                gain.gain.setValueAtTime(0.02, now); gain.gain.exponentialRampToValueAtTime(0.00001, now + 0.08);
+                osc.start(now); osc.stop(now + 0.08);
+            } else if (type === 'error') {
+                osc.type = 'sawtooth'; osc.frequency.setValueAtTime(110, now);
+                osc.frequency.linearRampToValueAtTime(80, now + 0.25);
+                gain.gain.setValueAtTime(0.06, now); gain.gain.exponentialRampToValueAtTime(0.00001, now + 0.25);
+                osc.start(now); osc.stop(now + 0.25);
+            }
         }
 
-        // Logic
+        // Sci-Fi Mainframe TTS Engine (GLaDOS / Mother Calibration V2)
+        function speakLikeSAM(phrase) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                
+                const processedPhrase = phrase.toUpperCase().replace(/, /g, "... ... ").replace(/ /g, "... ");
+                const utterance = new SpeechSynthesisUtterance(processedPhrase);
+                const voices = window.speechSynthesis.getVoices();
+                
+                const mainframeVoice = voices.find(v => 
+                    v.name.toLowerCase().includes('zira') || 
+                    v.name.toLowerCase().includes('google uk english female') ||
+                    v.name.toLowerCase().includes('hazel') ||
+                    v.name.toLowerCase().includes('female') ||
+                    v.name.toLowerCase().includes('google us english')
+                );
+                
+                if (mainframeVoice) utterance.voice = mainframeVoice;
+
+                utterance.pitch = 0.95; 
+                utterance.rate = 0.52;  
+                utterance.volume = 1.0; 
+                
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        // --- Generalized Typewriter Engine ---
+        function runTypewriter(elementOrId, text, speed, cb) {
+            if (typewriterTimeout) clearTimeout(typewriterTimeout);
+            
+            let el = typeof elementOrId === "string" ? document.getElementById(elementOrId) : elementOrId;
+            if (!el) return;
+            
+            let i = 0;
+            el.textContent = "";
+            
+            function type() { 
+                if (i < text.length) { 
+                    el.textContent += text.charAt(i); 
+                    i++; 
+                    if (i % 3 === 0) playTerminalSound('click');
+                    typewriterTimeout = setTimeout(type, speed); 
+                } else {
+                    typewriterTimeout = null;
+                    if (cb) cb(); 
+                }
+            }
+            type();
+        }
+
+        // --- Real-Time Clock System ---
+        function runClock() {
+            setInterval(() => {
+                const clockEl = document.getElementById('live-clock');
+                if (clockEl) {
+                    const t = new Date();
+                    clockEl.innerText = `TIME: ${t.toTimeString().split(' ')[0]}`;
+                }
+            }, 1000);
+        }
+
+        // --- Matrices Screensaver ---
+        const canvas = document.getElementById('screensaver');
+        const ctx = canvas.getContext('2d');
+        let columns = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            columns = Array(Math.floor(canvas.width / 20)).fill(0);
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        function drawScreensaver() {
+            ctx.fillStyle = 'rgba(3, 2, 0, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#ffb000';
+            ctx.font = '20px monospace';
+
+            columns.forEach((y, index) => {
+                const text = String.fromCharCode(33 + Math.random() * 93);
+                const x = index * 20;
+                ctx.fillText(text, x, y);
+                if (y > 100 + Math.random() * 10000) columns[index] = 0;
+                else columns[index] = y + 20;
+            });
+        }
+
+        let screensaverInterval = null;
+        function resetIdleTimer() {
+            if (canvas.style.display === "block") {
+                canvas.style.display = "none";
+                clearInterval(screensaverInterval);
+                playTerminalSound('enter');
+            }
+            clearTimeout(idleTimer);
+            idleTimer = setTimeout(() => {
+                canvas.style.display = "block";
+                resizeCanvas();
+                screensaverInterval = setInterval(drawScreensaver, 40);
+            }, 30000);
+        }
+        window.addEventListener('mousemove', resetIdleTimer);
+        window.addEventListener('keydown', resetIdleTimer);
+
+        // --- Simulated Decryption Progress Engine ---
+        function triggerDecryptionSequence(fileContent) {
+            const mainContent = document.getElementById('main-content');
+            const fileScreen = document.getElementById('file-content-screen');
+            const fileTextArea = document.getElementById('file-text-area');
+
+            mainContent.style.display = "none";
+            fileScreen.style.display = "block";
+            
+            let percent = 0;
+            const interval = setInterval(() => {
+                percent += 5;
+                let barCount = Math.floor(percent / 5);
+                let blocks = "█".repeat(barCount) + "░".repeat(20 - barCount);
+                
+                fileTextArea.textContent = `DECRYPTING STREAM SECURE CORE DATA...\n\n`;
+                fileTextArea.textContent += `PROGRESS: [${blocks}] ${percent}%\n\n`;
+                fileTextArea.textContent += `STATUS: BYPASSING PROTOCOL LOCK 47-A...\n`;
+                
+                if (percent % 20 === 0) playTerminalSound('click');
+
+                if (percent >= 100) {
+                    clearInterval(interval);
+                    playTerminalSound('enter');
+                    runTypewriter(fileTextArea, fileContent, 5);
+                }
+            }, 60);
+        }
+
+        const inputEl = document.getElementById('terminal-input');
+        const wrapperEl = document.querySelector('.input-wrapper');
+        const promptLabel = document.getElementById('prompt-label');
+
+        function updateCursor() { 
+            if (inputEl && wrapperEl) {
+                let textLength = inputEl.value.length;
+                let offset = promptLabel.offsetWidth + (textLength * 13.2) + 5;
+                wrapperEl.style.setProperty('--cursor-pos', `${offset}px`); 
+            }
+        }
+        
+        if (inputEl) {
+            inputEl.addEventListener('input', () => { updateCursor(); playTerminalSound('click'); });
+        }
+
+        // --- Login Page Input Engine ---
         const loginInput = document.getElementById('login-input');
-        loginInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && loginInput.value.toLowerCase() === 'guest') {
-                document.getElementById('power-on-screen').style.display = "none";
-                document.getElementById('intro-screen').style.display = "block";
-                // TRIGGER YOUR VOICE HERE:
-                // playVoiceClip('hello.mp3'); 
-                startBoot();
+        const loginBoxContainer = document.getElementById('login-box-container');
+        const loginErrorMsg = document.getElementById('login-error-msg');
+
+        function updateLoginCursor() {
+            if (loginInput && loginBoxContainer) {
+                let textLength = loginInput.value.length;
+                // Calculates offset positioning inside login text field
+                let offset = 135 + (textLength * 14.3);
+                loginBoxContainer.style.setProperty('--login-cursor-pos', `${offset}px`);
+            }
+        }
+
+        // Auto-focus the password field immediately when page loads
+        window.addEventListener('DOMContentLoaded', () => {
+            if(loginInput) loginInput.focus();
+        });
+        // Refocus if user clicks anywhere on the screen
+        document.addEventListener('click', () => {
+            if(document.getElementById('power-on-screen').style.display !== "none" && loginInput) {
+                loginInput.focus();
             }
         });
 
-        function startBoot() {
-            // Your existing boot logic here
-            document.getElementById('boot-1').textContent = "INITIALIZING...";
-            setTimeout(() => { document.getElementById('intro-screen').style.display = "none"; document.getElementById('boot-header').style.display = "block"; }, 2000);
+        if (loginInput) {
+            loginInput.addEventListener('input', () => {
+                updateLoginCursor();
+                playTerminalSound('click');
+            });
+
+            loginInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    initAudio(); // Initialize audio node context on user submission gesture
+                    const val = loginInput.value.trim().toLowerCase();
+                    
+                    if (val === 'guest') {
+                        loginErrorMsg.textContent = "";
+                        document.getElementById('power-on-screen').style.display = "none";
+                        playTerminalSound('enter');
+                        startTerminalBoot();
+                    } else {
+                        playTerminalSound('error');
+                        loginErrorMsg.textContent = "CRITICAL ERROR: ACCESS DENIED. IDENTITY UNRECOGNIZED.";
+                        loginInput.value = "";
+                        updateLoginCursor();
+                    }
+                }
+            });
+        }
+        
+        function startTerminalBoot() {
+            runClock();
+            resetIdleTimer();
+            if ('speechSynthesis' in window) window.speechSynthesis.getVoices();
+            
+            document.getElementById('intro-screen').style.display = "block";
+            
+            const bootText = "O.V.I.S. CORES v7.4.18 - I.C.C. 1955.\n> Initializing Core Processes... [OK]\n> Connecting to Habitat-07 Systems... [OK]\n> Power Grid Status........ONLINE\n> Atmospheric Systems......ONLINE\n> Security Network.........ONLINE\n> Medical Network..........ONLINE\n> Communications...........ONLINE\n> Scanning Personnel Registry... 2,814 Residents Located\n> Scanning Surface Sensors... Environmental Conditions: UNSAFE\n> Monitoring Active Threats... NO CONFIRMED THREATS\n> Directive 47-A Database... ACCESS RESTRICTED\n> Administrator Link... CONNECTED\nclass OVIS { bool habitatOnline = true; bool securityOnline = true; };";
+
+            runTypewriter("boot-1", bootText, 6, () => {
+                runTypewriter("boot-2", "SYSTEM RAM: 640KB OK (SECURE CHANNEL ACTIVATED)", 6, () => {
+                    document.getElementById('boot-3').innerHTML = "CONNECTING TO I.C.C. CODES CORE... ESTABLISHED."; document.getElementById('logo-area').style.display = "block";
+                    setTimeout(() => { document.getElementById('intro-screen').style.display = "none"; document.getElementById('boot-header').style.display = "block"; document.getElementById('static-logo').style.display = "block"; }, 1500);
+                });
+            });
+        }
+        
+        document.getElementById('btn-access').addEventListener('click', () => { playTerminalSound('enter'); document.getElementById('boot-header').style.display = "none"; document.getElementById('main-content').style.display = "block"; document.getElementById('output-box').style.display = "none"; if (inputEl) { inputEl.focus(); updateCursor(); } });
+        document.getElementById('btn-back').addEventListener('click', () => { playTerminalSound('click'); document.getElementById('main-content').style.display = "none"; document.getElementById('boot-header').style.display = "block"; if (inputEl) { inputEl.value = ""; currentMode = "COMMAND"; promptLabel.textContent = "COMMAND:> "; updateCursor(); } });
+        document.getElementById('btn-close-file').addEventListener('click', () => { playTerminalSound('click'); if(typewriterTimeout) clearTimeout(typewriterTimeout); document.getElementById('file-content-screen').style.display = "none"; document.getElementById('main-content').style.display = "block"; if (inputEl) { inputEl.focus(); updateCursor(); } });
+        
+        function carregarFicheiro(nomeFicheiro) {
+            fetch(nomeFicheiro)
+                .then(response => { if (!response.ok) throw new Error(); return response.text(); })
+                .then(texto => { 
+                    triggerDecryptionSequence(texto); 
+                })
+                .catch(() => { 
+                    const out = document.getElementById('output-box'); 
+                    playTerminalSound('error'); 
+                    out.style.display = "block"; 
+                    runTypewriter(out, `CRITICAL ERROR: Failed to read file '${nomeFicheiro}' from server.`, 8);
+                });
         }
 
-        document.getElementById('btn-access').addEventListener('click', () => {
-            document.getElementById('boot-header').style.display = "none";
-            document.getElementById('main-content').style.display = "block";
-        });
+        if (inputEl) {
+            inputEl.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    const rawInput = inputEl.value.trim();
+                    const cmd = rawInput.toLowerCase();
+                    const out = document.getElementById('output-box'); 
+                    out.style.display = "none";
+                    
+                    if (currentMode === "COMMAND") {
+                        if (cmd === 'help') { carregarFicheiro('help.txt'); } 
+                        else if (cmd === 'clear') { playTerminalSound('enter'); out.innerHTML = ""; } 
+                        else if (
+                            cmd === 'hi' || cmd === 'hey' || cmd === 'hello' || cmd.includes('say hello') ||
+                            cmd === 'yo' || cmd === 'sup' || cmd === 'greetings' || cmd === 'howdy' ||
+                            cmd === 'salutations' || cmd === 'oi' || cmd === 'ola' || cmd === 'hola' ||
+                            cmd === 'good morning' || cmd === 'good afternoon' || cmd === 'good evening' ||
+                            cmd.includes('whats up') || cmd.includes('what up') || cmd === 'hi there' ||
+                            cmd === 'hello there'
+                        ) {
+                            if (audioCtx && audioCtx.state !== 'suspended') {
+                                const now = audioCtx.currentTime;
+                                let osc1 = audioCtx.createOscillator();
+                                let gain1 = audioCtx.createGain();
+                                osc1.type = 'sine'; osc1.frequency.setValueAtTime(880, now);
+                                gain1.gain.setValueAtTime(0.01, now); gain1.gain.exponentialRampToValueAtTime(0.00001, now + 0.05);
+                                osc1.connect(gain1); gain1.connect(audioCtx.destination);
+                                osc1.start(now); osc1.stop(now + 0.05);
+                                
+                                let osc2 = audioCtx.createOscillator();
+                                let gain2 = audioCtx.createGain();
+                                osc2.type = 'sine'; osc2.frequency.setValueAtTime(1109, now + 0.04);
+                                gain2.gain.setValueAtTime(0.01, now + 0.04); gain2.gain.exponentialRampToValueAtTime(0.00001, now + 0.10);
+                                osc2.connect(gain2); gain2.connect(audioCtx.destination);
+                                osc2.start(now + 0.04); osc2.stop(now + 0.10);
+                            }
+                            
+                            speakLikeSAM("Greetings, hello operator.");
+                            
+                            out.style.display = "block";
+                            runTypewriter(out, "\n[HELLO WORLD]\nTERMINAL STATUS: ACTIVE\nGREETINGS, HELLO OPERATOR.", 6);
+                        }
+                        else if (cmd === 'icc-exec-001' || cmd === 'icc-swarm-001') {
+                            playTerminalSound('error');
+                            pendingFile = cmd + ".txt"; 
+                            currentMode = "PASSWORD";
+                            promptLabel.textContent = "ENTER 4-DIGIT PIN:> ";
+                            out.style.display = "block";
+                            runTypewriter(out, "WARNING: ENCRYPTED PROFILE DETECTED. AUTHORIZATION CODE REQUIRED.", 8);
+                        }
+                        else if (cmd !== "") { 
+                            playTerminalSound('error'); 
+                            out.style.display = "block"; 
+                            runTypewriter(out, `ERROR: Command '${cmd}' not recognized.`, 8); 
+                        }
+                    } 
+                    else if (currentMode === "PASSWORD") {
+                        if (cmd === "1955") {
+                            playTerminalSound('enter');
+                            currentMode = "COMMAND";
+                            promptLabel.textContent = "COMMAND:> ";
+                            carregarFicheiro(pendingFile); 
+                        } else {
+                            playTerminalSound('error');
+                            currentMode = "COMMAND";
+                            promptLabel.textContent = "COMMAND:> ";
+                            out.style.display = "block";
+                            runTypewriter(out, "ACCESS DENIED: INVALID AUTHORIZATION TERMINAL KEY. RESETTING CONTEXT.", 8);
+                        }
+                    }
+                    inputEl.value = ""; updateCursor();
+                }
+            });
+        }
     </script>
 </body>
 </html>
