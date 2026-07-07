@@ -101,8 +101,8 @@
 
             if (type === 'click') {
                 osc.type = 'triangle'; osc.frequency.setValueAtTime(600, now);
-                // Increased gain volume value here from 0.01 to 0.08 for a louder click!
-                gain.gain.setValueAtTime(0.08, now); gain.gain.exponentialRampToValueAtTime(0.00001, now + 0.03);
+                // Volume set precisely to 0.1
+                gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.00001, now + 0.03);
                 osc.start(now); osc.stop(now + 0.03);
             } else if (type === 'enter') {
                 osc.type = 'square'; osc.frequency.setValueAtTime(450, now);
@@ -286,7 +286,6 @@
                     if (currentMode === "COMMAND") {
                         if (cmd === 'help') { carregarFicheiro('help.txt'); } 
                         else if (cmd === 'clear') { playTerminalSound('enter'); out.innerHTML = ""; } 
-                        // --- GREETING COMMAND BLOCK ---
                         else if (
                             cmd === 'hi' || cmd === 'hey' || cmd === 'hello' || cmd.includes('say hello') ||
                             cmd === 'yo' || cmd === 'sup' || cmd === 'greetings' || cmd === 'howdy' ||
@@ -315,7 +314,6 @@
                             out.style.display = "block";
                             runTypewriter(out, "\n[O.V.I.S. OVERLOAD PROTOCOL]\nSTATUS: ACTIVE\nGREETINGS, OPERATOR. REPOSITORY SUBSYSTEM IS LISTENING.", 6);
                         }
-                        // --- END OF GREETINGS ---
                         else if (cmd === 'icc-exec-001' || cmd === 'icc-swarm-001') {
                             playTerminalSound('error');
                             pendingFile = cmd + ".txt"; 
