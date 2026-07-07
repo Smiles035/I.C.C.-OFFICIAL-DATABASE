@@ -130,7 +130,7 @@
             }
         }
 
-        // --- HAL 9000 Vocal Emulation Matrix ---
+        // --- Forced Male HAL 9000 Engine Matrix ---
         function speakLikeHAL(phrase) {
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
@@ -138,20 +138,24 @@
                 const utterance = new SpeechSynthesisUtterance(phrase);
                 const voices = window.speechSynthesis.getVoices();
                 
-                // Prioritize smooth, deep, mature male speech synthesis profiles
-                const halVoice = voices.find(v => 
-                    v.name.toLowerCase().includes('david') || 
-                    v.name.toLowerCase().includes('microsoft david') ||
-                    v.name.toLowerCase().includes('google us english male') ||
-                    v.name.toLowerCase().includes('male') ||
-                    v.name.toLowerCase().includes('premium')
-                );
+                // 1. Strict priority lookup for classic baritone male systems
+                let halVoice = voices.find(v => v.name.toLowerCase().includes('microsoft david') || v.name.toLowerCase().includes('david'));
                 
+                // 2. Fallback to any alternative male system engine profiles
+                if (!halVoice) {
+                    halVoice = voices.find(v => v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('google us english male'));
+                }
+                
+                // 3. Last resort protective barrier to filter out explicitly female voices if possible
+                if (!halVoice) {
+                    halVoice = voices.find(v => !v.name.toLowerCase().includes('zira') && !v.name.toLowerCase().includes('hazel') && !v.name.toLowerCase().includes('female'));
+                }
+
                 if (halVoice) utterance.voice = halVoice;
 
-                // HAL 9000 Signature Vocal Settings:
-                utterance.pitch = 0.68; // Severely compressed pitch down to a warm, flat baritone monotone
-                utterance.rate = 0.72;  // Deliberate, smooth, unhurried speaking tempo (creepy calmness)
+                // Adjust values to crush high registers into a flat, smooth baritone
+                utterance.pitch = 0.60; 
+                utterance.rate = 0.70;  
                 utterance.volume = 1.0; 
                 
                 window.speechSynthesis.speak(utterance);
@@ -383,7 +387,6 @@
                             cmd.includes('whats up') || cmd.includes('what up') || cmd === 'hi there' ||
                             cmd === 'hello there'
                         ) {
-                            // HAL 9000 Calm Monotone Delivery Triggers
                             speakLikeHAL("Good morning, operator. Everything is running smoothly.");
                             
                             out.style.display = "block";
