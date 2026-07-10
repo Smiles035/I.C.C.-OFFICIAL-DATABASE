@@ -31,6 +31,9 @@
         #output-box { margin-top: 20px; padding: 15px; border: 1px solid #ffb000; background: rgba(255, 176, 0, 0.03); display: none; white-space: pre-wrap; }
         #file-content-screen { display: none; border: 1px dashed #ffb000; padding: 25px; background: rgba(255, 176, 0, 0.02); margin-top: 20px; white-space: pre-wrap; line-height: 1.4; }
         #screensaver { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #030200; z-index: 100; }
+        
+        /* NEW STYLES FOR IMAGE */
+        #file-image-display { display: none; margin: 20px auto; border: 2px solid #ffb000; max-width: 400px; box-shadow: 0 0 15px rgba(255, 176, 0, 0.3); animation: crt-flicker 0.15s infinite; }
     </style>
 </head>
 <body>
@@ -72,6 +75,7 @@
                 <tbody>
                     <tr><td>help</td><td>help.sys</td><td>PUBLIC</td></tr>
                     <tr><td>clear</td><td>clear.sys</td><td>PUBLIC</td></tr>
+                    <tr><td>icc-exec-001</td><td>icc-exec-001.txt</td><td>RESTRICTED</td></tr>
                 </tbody>
             </table>
             <div id="output-box"></div><br>
@@ -80,18 +84,20 @@
         </div>
         
         <div id="file-content-screen">
+            <img id="file-image-display" src="varn2.png" alt="Personnel File Data">
             <div id="file-text-area"></div><br><hr style="border: 1px dashed #ffb000;"><br>
             <button id="btn-close-file" class="retro-btn">[ RETURN TO DIRECTORY ]</button>
         </div>
     </div>
 
     <script>
+        // ... (Keep all your existing JS variables) ...
         let currentMode = "COMMAND"; 
         let pendingFile = "";
         let idleTimer = null;
         let typewriterTimeout = null; 
         let audioCtx = null;
-        let activeAudio = null; // Track currently playing song
+        let activeAudio = null;
 
         function initAudio() {
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -172,10 +178,20 @@
         }
         window.addEventListener('mousemove', resetIdleTimer); window.addEventListener('keydown', resetIdleTimer);
 
-        function triggerDecryptionSequence(fileContent) {
+        // MODIFIED: Accepts filename to show image
+        function triggerDecryptionSequence(fileContent, filename) {
             const mainContent = document.getElementById('main-content');
             const fileScreen = document.getElementById('file-content-screen');
             const fileTextArea = document.getElementById('file-text-area');
+            const imgDisplay = document.getElementById('file-image-display');
+            
+            // Show image only for this file
+            if (filename === 'icc-exec-001.txt') {
+                imgDisplay.style.display = "block";
+            } else {
+                imgDisplay.style.display = "none";
+            }
+
             mainContent.style.display = "none"; fileScreen.style.display = "block"; 
             let percent = 0;
             const interval = setInterval(() => {
@@ -236,10 +252,19 @@
 
         document.getElementById('btn-access').addEventListener('click', () => { playTerminalSound('enter'); document.getElementById('boot-header').style.display = "none"; document.getElementById('main-content').style.display = "block"; if (inputEl) inputEl.focus(); });
         document.getElementById('btn-back').addEventListener('click', () => { playTerminalSound('click'); document.getElementById('main-content').style.display = "none"; document.getElementById('boot-header').style.display = "block"; if (inputEl) { inputEl.value = ""; currentMode = "COMMAND"; promptLabel.textContent = "COMMAND:> "; } });
-        document.getElementById('btn-close-file').addEventListener('click', () => { playTerminalSound('click'); if(typewriterTimeout) clearTimeout(typewriterTimeout); document.getElementById('file-content-screen').style.display = "none"; document.getElementById('main-content').style.display = "block"; if (inputEl) inputEl.focus(); });
+        
+        // MODIFIED: Close button now also hides image
+        document.getElementById('btn-close-file').addEventListener('click', () => { 
+            playTerminalSound('click'); 
+            if(typewriterTimeout) clearTimeout(typewriterTimeout); 
+            document.getElementById('file-content-screen').style.display = "none"; 
+            document.getElementById('file-image-display').style.display = "none"; 
+            document.getElementById('main-content').style.display = "block"; 
+            if (inputEl) inputEl.focus(); 
+        });
 
         function carregarFicheiro(nomeFicheiro) {
-            fetch(nomeFicheiro).then(response => { if (!response.ok) throw new Error(); return response.text(); }).then(texto => { triggerDecryptionSequence(texto); }).catch(() => { const out = document.getElementById('output-box'); playTerminalSound('error'); out.style.display = "block"; runTypewriter(out, `CRITICAL ERROR: Failed to read file '${nomeFicheiro}'`, 8); });
+            fetch(nomeFicheiro).then(response => { if (!response.ok) throw new Error(); return response.text(); }).then(texto => { triggerDecryptionSequence(texto, nomeFicheiro); }).catch(() => { const out = document.getElementById('output-box'); playTerminalSound('error'); out.style.display = "block"; runTypewriter(out, `CRITICAL ERROR: Failed to read file '${nomeFicheiro}'`, 8); });
         }
 
         if (inputEl) {
@@ -250,13 +275,11 @@
                     const out = document.getElementById('output-box'); 
                     out.style.display = "none";
 
-                    // Stop previous song if a new command is entered
                     if (activeAudio) { activeAudio.pause(); activeAudio.currentTime = 0; }
 
                     if (currentMode === "COMMAND") {
                         if (cmd === 'help') { carregarFicheiro('help.txt'); } 
                         else if (cmd === 'clear') { playTerminalSound('enter'); out.innerHTML = ""; } 
-                        // SINGING COMMAND
                         else if (cmd === 'sing' || cmd === 'sing for me') {
                             activeAudio = new Audio('daisy.mp3'); 
                             activeAudio.play();
