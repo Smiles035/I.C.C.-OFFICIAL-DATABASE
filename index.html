@@ -29,12 +29,12 @@
         #terminal-input { background: transparent; border: none; color: #ffb000; font-family: 'VT323', monospace; font-size: 24px; outline: none; width: 100%; text-shadow: 0 0 6px rgba(255, 176, 0, 0.6); caret-color: transparent; }
         .input-wrapper::after { content: ""; position: absolute; left: var(--cursor-pos, 0px); width: 12px; height: 24px; background: #ffb000; animation: blink 0.8s infinite; pointer-events: none; box-shadow: 0 0 6px rgba(255, 176, 0, 0.6); display: inline-block; }
         #output-box { margin-top: 20px; padding: 15px; border: 1px solid #ffb000; background: rgba(255, 176, 0, 0.03); display: none; white-space: pre-wrap; }
-        
-        #file-content-screen { display: none; border: 1px dashed #ffb000; padding: 25px; background: rgba(255, 176, 0, 0.02); margin-top: 20px; flex-direction: row; gap: 20px; align-items: flex-start; }
-        #file-text-wrapper { flex: 1; }
-        
-        #file-image-display { display: none; border: 2px solid #ffb000; width: 250px; height: auto; box-shadow: 0 0 15px rgba(255, 176, 0, 0.3); animation: crt-flicker 0.15s infinite; flex-shrink: 0; }
         #screensaver { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #030200; z-index: 100; }
+        
+        /* FIXED: Using Flexbox for side-by-side layout */
+        #file-content-screen { display: none; border: 1px dashed #ffb000; padding: 25px; background: rgba(255, 176, 0, 0.02); margin-top: 20px; display: none; flex-direction: row; gap: 25px; align-items: flex-start; }
+        #file-image-display { display: none; border: 2px solid #ffb000; width: 200px; height: auto; flex-shrink: 0; box-shadow: 0 0 15px rgba(255, 176, 0, 0.3); animation: crt-flicker 0.15s infinite; }
+        #file-text-wrapper { flex: 1; white-space: pre-wrap; }
     </style>
 </head>
 <body>
@@ -189,7 +189,7 @@
             imgDisplay.style.display = (filename === 'icc-exec-001.txt') ? "block" : "none";
 
             mainContent.style.display = "none"; 
-            fileScreen.style.display = "flex"; 
+            fileScreen.style.display = "flex"; // Ensure it is flex
             
             let percent = 0;
             const interval = setInterval(() => {
